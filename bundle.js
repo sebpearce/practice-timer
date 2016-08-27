@@ -73,10 +73,11 @@
 	}
 
 	window.practiceTimer = {};
-	var timerQueue = window.practiceTimer.timerQueue = [];
+	window.practiceTimer.timerQueue = [];
 
 	document.addEventListener('DOMContentLoaded', function (e) {
 	  document.getElementById('inputbox').value = 'Scales 3s\nChords 2s\nPatterns 15m\nParty 00:30\nTimex 7\nThings 8:00\nStuff 45:20\nLol 08:30:42';
+	  loadAudio();
 	});
 
 	function updateTimerDisplay(rawSeconds) {
@@ -93,8 +94,23 @@
 	  document.getElementById('timer-display').style.display = 'block';
 	}
 
+	function loadAudio() {
+	  window.practiceTimer.beep2 = document.getElementById('beep2');
+	  window.practiceTimer.beep4 = document.getElementById('beep4');
+	}
+
+	function playChangeSound() {
+	  window.practiceTimer.beep2.currentTime = 0;
+	  window.practiceTimer.beep2.play();
+	}
+
+	function playFinishedSound() {
+	  window.practiceTimer.beep4.currentTime = 0;
+	  window.practiceTimer.beep4.play();
+	}
+
 	function clearQueue() {
-	  timerQueue = [];
+	  window.practiceTimer.timerQueue = [];
 	}
 
 	function stopTimer() {
@@ -103,11 +119,11 @@
 	  updateActivityDisplay('');
 	}
 
-	function showQueue() {
-	  var queueDisplayContainer = document.createElement('div');
-	  queueDisplayContainer.className = 'queue-container';
+	function updateQueue() {
+	  var queueDisplayContainer = document.getElementById('queue-container');
+	  queueDisplayContainer.innerHTML = '';
 
-	  timerQueue.forEach(function (el) {
+	  window.practiceTimer.timerQueue.forEach(function (el, i) {
 	    var row = document.createElement('div');
 	    row.className = 'queue-row';
 	    var activity = document.createElement('span');
@@ -118,38 +134,51 @@
 	    period.appendChild(document.createTextNode(el.period));
 	    row.appendChild(activity);
 	    row.appendChild(period);
+	    window.practiceTimer.timerQueue[i].row = row;
 	    queueDisplayContainer.appendChild(row);
 	  });
-
-	  document.body.appendChild(queueDisplayContainer);
 	}
 
 	function loadTimers() {
-	  // l('Queue was:');
-	  // l(timerQueue);
 	  clearQueue();
-	  // l('Queue has been cleared.');
 	  stopTimer();
 	  var inputText = document.getElementById('inputbox').value;
 	  var id = 1;
 	  var queue = _kit2.default.getQueueFromInput(inputText);
 	  l(queue);
 	  queue.forEach(function (el, id) {
-	    timerQueue.push(new _timer2.default(id, el.secondsLeft, el.activity, _kit2.default.getFormattedTimeDisplay(el.secondsLeft)));
+	    window.practiceTimer.timerQueue.push(new _timer2.default(id, el.secondsLeft, el.activity, _kit2.default.getFormattedTimeDisplay(el.secondsLeft)));
 	    id++;
 	  });
-	  // l('Queue is now:');
-	  // l(timerQueue);
-	  showQueue();
+	  updateQueue();
 	}
 
-	document.getElementById('start').addEventListener('click', function (e) {
+	function updateQueueDisplayRowHighlight(queueItem) {
+	  document.querySelectorAll('.queue-row').forEach(function (el) {
+	    _kit2.default.removeClass(el, '-running'); //
+	  });
+	  if (queueItem) _kit2.default.addClass(queueItem.row, '-running');
+	}
+
+	function finishIfQueueIsEmpty() {
+	  if (window.practiceTimer.timerQueue.length === 0) {
+	    playFinishedSound();
+	    stopTimer();
+	    updateQueueDisplayRowHighlight();
+	    l('Finished!');
+	    return true;
+	  }
+	  return false;
+	}
+
+	function handleStartButtonClick(e) {
 
 	  loadTimers();
-	  if (timerQueue.length === 0) return;
-	  var currentTimer = timerQueue[0];
+	  if (window.practiceTimer.timerQueue.length === 0) return;
+	  var currentTimer = window.practiceTimer.timerQueue[0];
 	  updateTimerDisplay(currentTimer.secondsLeft);
 	  updateActivityDisplay(currentTimer.activity);
+	  updateQueueDisplayRowHighlight(currentTimer);
 	  showTimerDisplay();
 
 	  window.practiceTimer.timerLoop = setInterval(function () {
@@ -157,15 +186,21 @@
 	    if (currentTimer.secondsLeft > 0) {
 	      currentTimer.secondsLeft -= 1;
 	      updateTimerDisplay(currentTimer.secondsLeft);
-	    } else {
-	      timerQueue.shift();
-	      if (timerQueue.length === 0) return;
-	      currentTimer = timerQueue[0];
-	      updateTimerDisplay(currentTimer.secondsLeft);
-	      updateActivityDisplay(currentTimer.activity);
+
+	      if (currentTimer.secondsLeft === 0) {
+	        window.practiceTimer.timerQueue.shift();
+	        if (finishIfQueueIsEmpty()) return;
+	        playChangeSound();
+	        currentTimer = window.practiceTimer.timerQueue[0];
+	        updateTimerDisplay(currentTimer.secondsLeft);
+	        updateActivityDisplay(currentTimer.activity);
+	        updateQueueDisplayRowHighlight(currentTimer);
+	      }
 	    }
 	  }, 1000);
-	});
+	}
+
+	document.getElementById('start').addEventListener('click', handleStartButtonClick);
 
 /***/ },
 /* 1 */
@@ -248,8 +283,22 @@
 	    'h': 3600,
 	    'm': 60,
 	    's': 1
-	  }
+	  },
 
+	  // hasClas, addClass & removeClass taken from
+	  // http://jaketrent.com/post/addremove-classes-raw-javascript/
+	  hasClass: function hasClass(el, className) {
+	    if (el.classList) return el.classList.contains(className);else return !!el.className.match(new RegExp('(\\s|^)' + className + '(\\s|$)'));
+	  },
+	  addClass: function addClass(el, className) {
+	    if (el.classList) el.classList.add(className);else if (!hasClass(el, className)) el.className += " " + className;
+	  },
+	  removeClass: function removeClass(el, className) {
+	    if (el.classList) el.classList.remove(className);else if (hasClass(el, className)) {
+	      var reg = new RegExp('(\\s|^)' + className + '(\\s|$)');
+	      el.className = el.className.replace(reg, ' ');
+	    }
+	  }
 	};
 
 	exports.default = kit;
@@ -313,7 +362,7 @@
 
 
 	// module
-	exports.push([module.id, "body {\n  color: #444;\n  font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif; }\n\n.inputbox {\n  display: block;\n  font-size: 21px;\n  height: 400px;\n  margin: 0 0 1em 0;\n  width: 400px; }\n\n.queue-row {\n  font-size: 20px; }\n\n.queue-row-activity,\n.queue-row-period {\n  display: inline-block; }\n\n.queue-row-activity {\n  width: 200px; }\n\n.queue-row-period {\n  width: 100px; }\n\n.timer-display-container {\n  padding: 30px 0; }\n\n.timer-display {\n  display: none;\n  font-size: 100px;\n  font-weight: bold; }\n\n.timer-display-separator:after {\n  content: ':'; }\n\n.timer-display-activity {\n  display: block;\n  font-size: 30px;\n  height: 40px; }\n", ""]);
+	exports.push([module.id, "body {\n  color: #444;\n  font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif; }\n\n.inputbox {\n  display: block;\n  font-size: 21px;\n  height: 400px;\n  margin: 0 0 1em 0;\n  width: 400px; }\n\n.-running {\n  color: red; }\n\n.queue-row {\n  font-size: 20px; }\n\n.queue-row-activity,\n.queue-row-period {\n  display: inline-block; }\n\n.queue-row-activity {\n  width: 200px; }\n\n.queue-row-period {\n  width: 100px; }\n\n.timer-display-container {\n  padding: 30px 0; }\n\n.timer-display {\n  display: none;\n  font-size: 100px;\n  font-weight: bold; }\n\n.timer-display-separator:after {\n  content: ':'; }\n\n.timer-display-activity {\n  display: block;\n  font-size: 30px;\n  height: 40px; }\n", ""]);
 
 	// exports
 
