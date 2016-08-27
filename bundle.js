@@ -68,19 +68,55 @@
 	window.practiceTimer.timers = [];
 
 	document.addEventListener('DOMContentLoaded', function (e) {
-	  document.getElementById('inputbox').value = 'Scales 10m\nChords 5m\nPatterns 15m\nParty 00:30\nThings 8:00\nStuff 45:20\nLol 08:30:42';
+	  document.getElementById('inputbox').value = 'Scales 3s\nChords 2s\nPatterns 15m\nParty 00:30\nTimex 7\nThings 8:00\nStuff 45:20\nLol 08:30:42';
 	});
+
+	function updateTimerDisplay(rawSeconds) {
+	  document.getElementById('timer-display-hr').innerHTML = _kit2.default.getHoursDisplay(rawSeconds);
+	  document.getElementById('timer-display-min').innerHTML = _kit2.default.getMinutesDisplay(rawSeconds);
+	  document.getElementById('timer-display-sec').innerHTML = _kit2.default.getSecondsDisplay(rawSeconds);
+	}
+
+	function updateActivityDisplay(activity) {
+	  document.getElementById('timer-display-activity').innerHTML = activity;
+	}
+
+	function loadTimers() {
+	  var inputText = document.getElementById('inputbox').value;
+	  var id = 1;
+	  var queue = _kit2.default.getQueueFromInput(inputText);
+	  queue.forEach(function (el, id) {
+	    window.practiceTimer.timers.push(new _timer2.default(id, el.period, el.activity));
+	    id++;
+	  });
+	  console.log(window.practiceTimer.timers);
+	}
 
 	document.getElementById('start').addEventListener('click', function (e) {
 
-	  var inputText = document.getElementById('inputbox').value;
+	  loadTimers();
+	  var currentTimer = window.practiceTimer.timers[0];
+	  var now = Date.now();
+	  currentTimer.toFinishAt = new Date(now + currentTimer.totalSeconds * 1000);
+	  updateTimerDisplay((currentTimer.toFinishAt - now) / 1000);
+	  updateActivityDisplay(currentTimer.activity);
 
-	  console.log(JSON.stringify(_kit2.default.getQueueFromInput(inputText)));
+	  window.practiceTimer.timerLoop = setInterval(function () {
 
-	  // window.practiceTimer.timerLoop = setInterval(function() {
-	  //   // console.log('hi!');
-	  //   // console.log('Seconds left: ' + kit.secondsBetweenNowAnd(self.toFinishAt));
-	  // }, 1000);
+	    var now = Date.now();
+
+	    if (currentTimer.toFinishAt >= now) {
+	      var diff = Math.round((currentTimer.toFinishAt - now) / 1000);
+	      updateTimerDisplay(diff);
+	    } else {
+	      window.practiceTimer.timers.shift();
+	      if (window.practiceTimer.timers.length === 0) return;
+	      currentTimer = window.practiceTimer.timers[0];
+	      currentTimer.toFinishAt = new Date(now + currentTimer.totalSeconds * 1000);
+	      updateTimerDisplay((currentTimer.toFinishAt - now) / 1000);
+	      updateActivityDisplay(currentTimer.activity);
+	    }
+	  }, 1000);
 	});
 
 /***/ },
@@ -99,15 +135,16 @@
 	    var queue = lines.map(function (line) {
 	      var activity = line.match(re)[1];
 	      var period = line.match(re)[2];
+	      // console.log('Act: ' + activity + '; Per: ' + period);
 	      return {
 	        activity: activity,
-	        period: kit.parseTotalSeconds(line)
+	        period: kit.parseTotalSeconds(period)
 	      };
 	    });
 	    return queue;
 	  },
 	  parseTotalSeconds: function parseTotalSeconds(input) {
-	    return kit.parseSecondsFromHMSNotation(input) || kit.parseSecondsFromDigitalNotation(input) || 0;
+	    return kit.parseSecondsFromHMSNotation(input) || kit.parseSecondsFromDigitalNotation(input) || kit.parseSecondsFromSingleNumber(input) || 0;
 	  },
 	  parseSecondsFromHMSNotation: function parseSecondsFromHMSNotation(input) {
 	    if (!input.match(/\d+\s?[hms]/)) return false;
@@ -128,26 +165,28 @@
 	    var result = hr + min + sec;
 	    return result;
 	  },
+	  parseSecondsFromSingleNumber: function parseSecondsFromSingleNumber(input) {
+	    if (!input.match(/^(\d+)$/)) return false;
+	    var result = parseInt(input) * 60;
+	    return result;
+	  },
 	  padWithZero: function padWithZero(x) {
 	    return x < 10 ? '0' + x : x;
 	  },
 	  secondsBetweenNowAnd: function secondsBetweenNowAnd(laterTime) {
 	    return Math.round((laterTime - Date.now()) / 1000);
 	  },
-	  finishDate: function finishDate(startDate, deltaInMs) {
-	    return new Date(startDate.getTime() + deltaInMs);
-	  },
 	  getSecondsDisplay: function getSecondsDisplay(rawSeconds) {
-	    return rawSeconds % 60;
+	    return kit.padWithZero(rawSeconds % 60);
 	  },
 	  getMinutesDisplay: function getMinutesDisplay(rawSeconds) {
 	    var s = rawSeconds % 60;
-	    return (rawSeconds - s) / 60 % 60;
+	    return kit.padWithZero((rawSeconds - s) / 60 % 60);
 	  },
 	  getHoursDisplay: function getHoursDisplay(rawSeconds) {
 	    var s = rawSeconds % 60;
 	    var m = (rawSeconds - s) / 60 % 60;
-	    return (rawSeconds - m * 60 - s) / 3600;
+	    return kit.padWithZero((rawSeconds - m * 60 - s) / 3600);
 	  },
 	  getFormattedTimeDisplay: function getFormattedTimeDisplay(rawSeconds) {
 	    return this.padWithZero(this.getHoursDisplay(rawSeconds)) + ':' + this.padWithZero(this.getMinutesDisplay(rawSeconds)) + ':' + this.padWithZero(this.getSecondsDisplay(rawSeconds));
@@ -158,44 +197,6 @@
 	    'h': 3600,
 	    'm': 60,
 	    's': 1
-	  },
-
-	  longhandNumbers: {
-	    'a thousand': '1000',
-	    'one thousand': '1000',
-	    'thousand': '1000',
-	    'one hundred': '100',
-	    'a hundred': '100',
-	    'hundred': '100',
-	    'ninety': '90',
-	    'eighty': '80',
-	    'seventy': '70',
-	    'sixty': '60',
-	    'fifty': '50',
-	    'forty': '40',
-	    'thirty': '30',
-	    'twenty': '20',
-	    'nineteen': '19',
-	    'eighteen': '18',
-	    'seventeen': '17',
-	    'sixteen': '16',
-	    'fifteen': '15',
-	    'fourteen': '14',
-	    'thirteen': '13',
-	    'twelve': '12',
-	    'eleven': '11',
-	    'ten': '10',
-	    'nine': '9',
-	    'eight': '8',
-	    'seven': '7',
-	    'six': '6',
-	    'five': '5',
-	    'four': '4',
-	    'three': '3',
-	    'two': '2',
-	    'one': '1',
-	    'and': '',
-	    '-': ' '
 	  }
 
 	};
@@ -204,27 +205,23 @@
 
 /***/ },
 /* 2 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
 	'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
+	function finishDate(startDate, deltaInMs) {
+	  return new Date(startDate.getTime() + deltaInMs);
+	}
 
-	var _kit = __webpack_require__(1);
-
-	var _kit2 = _interopRequireDefault(_kit);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	var Timer = function Timer(id, totalSeconds) {
+	var Timer = function Timer(id, totalSeconds, activity) {
 	  var self = this;
 	  this.id = id;
-	  this.status = 'running';
+	  this.activity = activity || '';
 	  this.totalSeconds = totalSeconds || 600;
-	  this.createdAt = new Date();
-	  this.toFinishAt = _kit2.default.finishDate(this.createdAt, this.totalSeconds * 1000);
+	  // this.toFinishAt = finishDate(this.createdAt, this.totalSeconds * 1000);
 	};
 
 	exports.default = Timer;
@@ -264,7 +261,7 @@
 
 
 	// module
-	exports.push([module.id, ".inputbox {\n  display: block;\n  font-size: 16px;\n  height: 200px;\n  margin: 0 0 1em 0;\n  width: 400px; }\n", ""]);
+	exports.push([module.id, "body {\n  color: #444;\n  font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif; }\n\n.inputbox {\n  display: block;\n  font-size: 16px;\n  height: 200px;\n  margin: 0 0 1em 0;\n  width: 400px; }\n\n.timer-display-container {\n  padding: 30px 0; }\n\n.timer-display {\n  font-size: 100px;\n  font-weight: bold; }\n\n.timer-display-separator:after {\n  content: ':'; }\n\n.timer-display-activity {\n  display: block;\n  font-size: 30px;\n  height: 40px; }\n", ""]);
 
 	// exports
 

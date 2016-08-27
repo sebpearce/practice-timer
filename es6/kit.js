@@ -6,9 +6,10 @@ const kit = {
     const queue = lines.map(function(line) {
       const activity = line.match(re)[1];
       const period = line.match(re)[2];
+      // console.log('Act: ' + activity + '; Per: ' + period);
       return {
         activity: activity,
-        period: kit.parseTotalSeconds(line),
+        period: kit.parseTotalSeconds(period),
       };
     });
     return queue;
@@ -17,6 +18,7 @@ const kit = {
   parseTotalSeconds(input) {
     return kit.parseSecondsFromHMSNotation(input) ||
       kit.parseSecondsFromDigitalNotation(input) ||
+      kit.parseSecondsFromSingleNumber(input) ||
       0;
   },
 
@@ -41,6 +43,12 @@ const kit = {
     return result;
   },
 
+  parseSecondsFromSingleNumber(input) {
+    if (!input.match(/^(\d+)$/)) return false;
+    const result = parseInt(input) * 60;
+    return result;
+  },
+
   padWithZero(x) {
     return (x < 10) ? '0' + x : x;
   },
@@ -49,23 +57,19 @@ const kit = {
     return Math.round((laterTime - Date.now()) / 1000);
   },
 
-  finishDate(startDate, deltaInMs) {
-    return new Date(startDate.getTime() + deltaInMs);
-  },
-
   getSecondsDisplay(rawSeconds) {
-    return rawSeconds % 60;
+    return kit.padWithZero(rawSeconds % 60);
   },
 
   getMinutesDisplay(rawSeconds) {
     const s = rawSeconds % 60;
-    return ((rawSeconds - s) / 60) % 60;
+    return kit.padWithZero(((rawSeconds - s) / 60) % 60);
   },
 
   getHoursDisplay(rawSeconds) {
     const s = rawSeconds % 60;
     const m = ((rawSeconds - s) / 60) % 60;
-    return (rawSeconds - (m * 60) - s) / 3600;
+    return kit.padWithZero((rawSeconds - (m * 60) - s) / 3600);
   },
 
   getFormattedTimeDisplay(rawSeconds) {
@@ -78,44 +82,6 @@ const kit = {
     'h': 3600,
     'm': 60,
     's': 1,
-  },
-
-  longhandNumbers: {
-    'a thousand': '1000',
-    'one thousand': '1000',
-    'thousand': '1000',
-    'one hundred': '100',
-    'a hundred': '100',
-    'hundred': '100',
-    'ninety': '90',
-    'eighty': '80',
-    'seventy': '70',
-    'sixty': '60',
-    'fifty': '50',
-    'forty': '40',
-    'thirty': '30',
-    'twenty': '20',
-    'nineteen': '19',
-    'eighteen': '18',
-    'seventeen': '17',
-    'sixteen': '16',
-    'fifteen': '15',
-    'fourteen': '14',
-    'thirteen': '13',
-    'twelve': '12',
-    'eleven': '11',
-    'ten': '10',
-    'nine': '9',
-    'eight': '8',
-    'seven': '7',
-    'six': '6',
-    'five': '5',
-    'four': '4',
-    'three': '3',
-    'two': '2',
-    'one': '1',
-    'and': '',
-    '-': ' ',
   },
 
 };

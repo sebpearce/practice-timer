@@ -1,12 +1,13 @@
-import kit from './kit';
+function finishDate(startDate, deltaInMs) {
+  return new Date(startDate.getTime() + deltaInMs);
+}
 
-const Timer = function(id, totalSeconds) {
+const Timer = function(id, totalSeconds, activity) {
   const self = this;
   this.id = id;
-  this.status = 'running';
+  this.activity = activity || '';
   this.totalSeconds = totalSeconds || 600;
-  this.createdAt = new Date;
-  this.toFinishAt = kit.finishDate(this.createdAt, this.totalSeconds * 1000);
+  // this.toFinishAt = finishDate(this.createdAt, this.totalSeconds * 1000);
 }
 
 export default Timer;
