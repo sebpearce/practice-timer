@@ -60,9 +60,18 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	(function () {
-	  // put code in here when finished
-	})();
+	/* TODO:
+	 *
+	 * - Total time display (both total time under queue and total time remaining countdown)
+	 * - Skip button to skip current stage
+	 * - Pause functionality
+	 * - Local storage to remember textarea data
+	 * - Beautify CSS
+	 * - Keyboard shortcuts
+	 * - "Time since finished" functionality/display
+	 * - Volume control (just use [audio element].volume)
+	 * - Don't show hour display if all timers in queue are below 60 min
+	 */
 
 	function l(x) {
 	  if (typeof x != 'string' && typeof x != 'number') {
@@ -362,7 +371,7 @@
 
 
 	// module
-	exports.push([module.id, "body {\n  color: #444;\n  font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif; }\n\n.inputbox {\n  display: block;\n  font-size: 21px;\n  height: 400px;\n  margin: 0 0 1em 0;\n  width: 400px; }\n\n.-running {\n  color: red; }\n\n.queue-row {\n  font-size: 20px; }\n\n.queue-row-activity,\n.queue-row-period {\n  display: inline-block; }\n\n.queue-row-activity {\n  width: 200px; }\n\n.queue-row-period {\n  width: 100px; }\n\n.timer-display-container {\n  padding: 30px 0; }\n\n.timer-display {\n  display: none;\n  font-size: 100px;\n  font-weight: bold; }\n\n.timer-display-separator:after {\n  content: ':'; }\n\n.timer-display-activity {\n  display: block;\n  font-size: 30px;\n  height: 40px; }\n", ""]);
+	exports.push([module.id, "body {\n  color: #444;\n  font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif; }\n\n.inputbox {\n  display: block;\n  font-size: 21px;\n  height: 400px;\n  margin: 0 0 1em 0;\n  width: 400px; }\n\n.-running {\n  color: red; }\n\n.queue-row {\n  font-size: 20px; }\n\n.queue-row-activity,\n.queue-row-period {\n  display: inline-block; }\n\n.queue-row-activity {\n  width: 200px; }\n\n.queue-row-period {\n  width: 100px; }\n\n.timer-display-container {\n  padding: 30px 0; }\n\n.timer-display {\n  display: none;\n  font-size: 100px;\n  font-weight: bold; }\n\n.timer-display-separator {\n  font-size: 40px;\n  padding-right: 20px; }\n\n.timer-display-activity {\n  display: block;\n  font-size: 30px;\n  height: 40px; }\n", ""]);
 
 	// exports
 

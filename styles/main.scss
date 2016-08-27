@@ -45,8 +45,13 @@ body {
   font-weight: bold;
 }
 
+.timer-display-separator {
+  font-size: 40px;
+  padding-right: 20px;
+}
+
 .timer-display-separator:after {
-  content: ':';
+  // content: ':';
 }
 
 .timer-display-activity {

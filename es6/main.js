@@ -1,6 +1,15 @@
-(function(){
-  // put code in here when finished
-})();
+/* TODO:
+ *
+ * - Total time display (both total time under queue and total time remaining countdown)
+ * - Skip button to skip current stage
+ * - Pause functionality
+ * - Local storage to remember textarea data
+ * - Beautify CSS
+ * - Keyboard shortcuts
+ * - "Time since finished" functionality/display
+ * - Volume control (just use [audio element].volume)
+ * - Don't show hour display if all timers in queue are below 60 min
+ */
 
 function l(x) {
   if (typeof(x) != 'string' && typeof(x) != 'number') {
