@@ -6,8 +6,8 @@ const Timer = function(id, totalSeconds, activity) {
   const self = this;
   this.id = id;
   this.activity = activity || '';
-  this.totalSeconds = totalSeconds || 600;
-  // this.toFinishAt = finishDate(this.createdAt, this.totalSeconds * 1000);
+  // this.totalSeconds = totalSeconds || 600;
+  this.secondsLeft = totalSeconds || 10;
 }
 
 export default Timer;

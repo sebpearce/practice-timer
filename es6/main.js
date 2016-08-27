@@ -2,17 +2,24 @@
   // put code in here when finished
 })();
 
+function l(x) {
+  if (typeof(x) != 'string' && typeof(x) != 'number') {
+    console.log(JSON.stringify(x));
+  } else {
+    console.log(x);
+  }
+}
+
 import kit from './kit';
 import Timer from './timer';
 import styles from '../styles/main.scss';
 
 window.practiceTimer = {};
-window.practiceTimer.timers = [];
+let timerQueue = window.practiceTimer.timerQueue = [];
 
 document.addEventListener('DOMContentLoaded', function(e) {
   document.getElementById('inputbox').value = 'Scales 3s\nChords 2s\nPatterns 15m\nParty 00:30\nTimex 7\nThings 8:00\nStuff 45:20\nLol 08:30:42';
 });
-
 
 function updateTimerDisplay(rawSeconds) {
   document.getElementById('timer-display-hr').innerHTML = kit.getHoursDisplay(rawSeconds);
@@ -24,39 +31,57 @@ function updateActivityDisplay(activity) {
   document.getElementById('timer-display-activity').innerHTML = activity;
 }
 
+function showTimerDisplay() {
+  document.getElementById('timer-display').style.display = 'block';
+}
+
+function clearQueue() {
+  timerQueue = [];
+}
+
+function stopTimer() {
+  clearInterval(window.practiceTimer.timerLoop);
+  updateTimerDisplay(0);
+  updateActivityDisplay('');
+}
+
 function loadTimers() {
+  // l('Queue was:');
+  // l(timerQueue);
+   clearQueue();
+  // l('Queue has been cleared.');
+  stopTimer();
   const inputText = document.getElementById('inputbox').value;
   const id = 1;
   const queue = kit.getQueueFromInput(inputText);
+  l(queue);
   queue.forEach((el, id) => {
-    window.practiceTimer.timers.push(new Timer(id, el.period, el.activity));
+    timerQueue.push(new Timer(id, el.period, el.activity));
     id++;
   });
-  console.log(window.practiceTimer.timers);
+  // l('Queue is now:');
+  // l(timerQueue);
 }
 
 document.getElementById('start').addEventListener('click', function(e) {
 
   loadTimers();
-  let currentTimer = window.practiceTimer.timers[0];
-  const now = Date.now();
-  currentTimer.toFinishAt = new Date(now + currentTimer.totalSeconds * 1000);
-  updateTimerDisplay((currentTimer.toFinishAt - now) / 1000);
+  if (timerQueue.length === 0) return;
+  let currentTimer = timerQueue[0];
+  updateTimerDisplay(currentTimer.secondsLeft);
   updateActivityDisplay(currentTimer.activity);
+  showTimerDisplay();
 
   window.practiceTimer.timerLoop = setInterval(() => {
 
-    const now = Date.now();
-
-    if (currentTimer.toFinishAt >= now) {
-      const diff = Math.round((currentTimer.toFinishAt - now) / 1000);
-      updateTimerDisplay(diff);
+    if (currentTimer.secondsLeft > 0) {
+      currentTimer.secondsLeft -= 1;
+      updateTimerDisplay(currentTimer.secondsLeft);
     } else {
-      window.practiceTimer.timers.shift();
-      if (window.practiceTimer.timers.length === 0) return;
-      currentTimer = window.practiceTimer.timers[0];
-      currentTimer.toFinishAt = new Date(now + currentTimer.totalSeconds * 1000);
-      updateTimerDisplay((currentTimer.toFinishAt - now) / 1000);
+      timerQueue.shift();
+      if (timerQueue.length === 0) return;
+      currentTimer = timerQueue[0];
+      updateTimerDisplay(currentTimer.secondsLeft);
       updateActivityDisplay(currentTimer.activity);
     }
 

@@ -64,8 +64,16 @@
 	  // put code in here when finished
 	})();
 
+	function l(x) {
+	  if (typeof x != 'string' && typeof x != 'number') {
+	    console.log(JSON.stringify(x));
+	  } else {
+	    console.log(x);
+	  }
+	}
+
 	window.practiceTimer = {};
-	window.practiceTimer.timers = [];
+	var timerQueue = window.practiceTimer.timerQueue = [];
 
 	document.addEventListener('DOMContentLoaded', function (e) {
 	  document.getElementById('inputbox').value = 'Scales 3s\nChords 2s\nPatterns 15m\nParty 00:30\nTimex 7\nThings 8:00\nStuff 45:20\nLol 08:30:42';
@@ -81,39 +89,57 @@
 	  document.getElementById('timer-display-activity').innerHTML = activity;
 	}
 
+	function showTimerDisplay() {
+	  document.getElementById('timer-display').style.display = 'block';
+	}
+
+	function clearQueue() {
+	  timerQueue = [];
+	}
+
+	function stopTimer() {
+	  clearInterval(window.practiceTimer.timerLoop);
+	  updateTimerDisplay(0);
+	  updateActivityDisplay('');
+	}
+
 	function loadTimers() {
+	  // l('Queue was:');
+	  // l(timerQueue);
+	  clearQueue();
+	  // l('Queue has been cleared.');
+	  stopTimer();
 	  var inputText = document.getElementById('inputbox').value;
 	  var id = 1;
 	  var queue = _kit2.default.getQueueFromInput(inputText);
+	  l(queue);
 	  queue.forEach(function (el, id) {
-	    window.practiceTimer.timers.push(new _timer2.default(id, el.period, el.activity));
+	    timerQueue.push(new _timer2.default(id, el.period, el.activity));
 	    id++;
 	  });
-	  console.log(window.practiceTimer.timers);
+	  // l('Queue is now:');
+	  // l(timerQueue);
 	}
 
 	document.getElementById('start').addEventListener('click', function (e) {
 
 	  loadTimers();
-	  var currentTimer = window.practiceTimer.timers[0];
-	  var now = Date.now();
-	  currentTimer.toFinishAt = new Date(now + currentTimer.totalSeconds * 1000);
-	  updateTimerDisplay((currentTimer.toFinishAt - now) / 1000);
+	  if (timerQueue.length === 0) return;
+	  var currentTimer = timerQueue[0];
+	  updateTimerDisplay(currentTimer.secondsLeft);
 	  updateActivityDisplay(currentTimer.activity);
+	  showTimerDisplay();
 
 	  window.practiceTimer.timerLoop = setInterval(function () {
 
-	    var now = Date.now();
-
-	    if (currentTimer.toFinishAt >= now) {
-	      var diff = Math.round((currentTimer.toFinishAt - now) / 1000);
-	      updateTimerDisplay(diff);
+	    if (currentTimer.secondsLeft > 0) {
+	      currentTimer.secondsLeft -= 1;
+	      updateTimerDisplay(currentTimer.secondsLeft);
 	    } else {
-	      window.practiceTimer.timers.shift();
-	      if (window.practiceTimer.timers.length === 0) return;
-	      currentTimer = window.practiceTimer.timers[0];
-	      currentTimer.toFinishAt = new Date(now + currentTimer.totalSeconds * 1000);
-	      updateTimerDisplay((currentTimer.toFinishAt - now) / 1000);
+	      timerQueue.shift();
+	      if (timerQueue.length === 0) return;
+	      currentTimer = timerQueue[0];
+	      updateTimerDisplay(currentTimer.secondsLeft);
 	      updateActivityDisplay(currentTimer.activity);
 	    }
 	  }, 1000);
@@ -133,15 +159,18 @@
 	    var re = /(.+)\s(.+)$/;
 	    var lines = input.split('\n');
 	    var queue = lines.map(function (line) {
+	      if (!line.match(re)) return null;
 	      var activity = line.match(re)[1];
 	      var period = line.match(re)[2];
-	      // console.log('Act: ' + activity + '; Per: ' + period);
 	      return {
 	        activity: activity,
 	        period: kit.parseTotalSeconds(period)
 	      };
 	    });
-	    return queue;
+	    // removes falsy elements
+	    return queue.filter(function (el) {
+	      return el;
+	    });
 	  },
 	  parseTotalSeconds: function parseTotalSeconds(input) {
 	    return kit.parseSecondsFromHMSNotation(input) || kit.parseSecondsFromDigitalNotation(input) || kit.parseSecondsFromSingleNumber(input) || 0;
@@ -220,8 +249,8 @@
 	  var self = this;
 	  this.id = id;
 	  this.activity = activity || '';
-	  this.totalSeconds = totalSeconds || 600;
-	  // this.toFinishAt = finishDate(this.createdAt, this.totalSeconds * 1000);
+	  // this.totalSeconds = totalSeconds || 600;
+	  this.secondsLeft = totalSeconds || 10;
 	};
 
 	exports.default = Timer;
@@ -261,7 +290,7 @@
 
 
 	// module
-	exports.push([module.id, "body {\n  color: #444;\n  font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif; }\n\n.inputbox {\n  display: block;\n  font-size: 16px;\n  height: 200px;\n  margin: 0 0 1em 0;\n  width: 400px; }\n\n.timer-display-container {\n  padding: 30px 0; }\n\n.timer-display {\n  font-size: 100px;\n  font-weight: bold; }\n\n.timer-display-separator:after {\n  content: ':'; }\n\n.timer-display-activity {\n  display: block;\n  font-size: 30px;\n  height: 40px; }\n", ""]);
+	exports.push([module.id, "body {\n  color: #444;\n  font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif; }\n\n.inputbox {\n  display: block;\n  font-size: 21px;\n  height: 400px;\n  margin: 0 0 1em 0;\n  width: 400px; }\n\n.timer-display-container {\n  padding: 30px 0; }\n\n.timer-display {\n  display: none;\n  font-size: 100px;\n  font-weight: bold; }\n\n.timer-display-separator:after {\n  content: ':'; }\n\n.timer-display-activity {\n  display: block;\n  font-size: 30px;\n  height: 40px; }\n", ""]);
 
 	// exports
 

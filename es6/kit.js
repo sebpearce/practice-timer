@@ -4,15 +4,16 @@ const kit = {
     const re = /(.+)\s(.+)$/;
     const lines = input.split('\n');
     const queue = lines.map(function(line) {
+      if (!line.match(re)) return null;
       const activity = line.match(re)[1];
       const period = line.match(re)[2];
-      // console.log('Act: ' + activity + '; Per: ' + period);
       return {
         activity: activity,
         period: kit.parseTotalSeconds(period),
       };
     });
-    return queue;
+    // removes falsy elements
+    return queue.filter((el) => (el));
   },
 
   parseTotalSeconds(input) {
