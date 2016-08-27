@@ -11,6 +11,26 @@ body {
   width: 400px;
 }
 
+.queue-container {
+}
+
+.queue-row {
+  font-size: 20px;
+}
+
+.queue-row-activity,
+.queue-row-period {
+  display: inline-block;
+}
+
+.queue-row-activity {
+  width: 200px;
+}
+
+.queue-row-period {
+  width: 100px;
+}
+
 .timer-display-container {
   padding: 30px 0;
 }

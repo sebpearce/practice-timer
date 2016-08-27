@@ -45,6 +45,27 @@ function stopTimer() {
   updateActivityDisplay('');
 }
 
+function showQueue() {
+  const queueDisplayContainer = document.createElement('div');
+  queueDisplayContainer.className = 'queue-container';
+
+  timerQueue.forEach((el) => {
+    const row = document.createElement('div');
+    row.className = 'queue-row';
+    const activity = document.createElement('span');
+    activity.className = 'queue-row-activity';
+    activity.appendChild(document.createTextNode(el.activity));
+    const period = document.createElement('span');
+    period.className = 'queue-row-period';
+    period.appendChild(document.createTextNode(el.period));
+    row.appendChild(activity);
+    row.appendChild(period);
+    queueDisplayContainer.appendChild(row);
+  });
+
+  document.body.appendChild(queueDisplayContainer);
+}
+
 function loadTimers() {
   // l('Queue was:');
   // l(timerQueue);
@@ -56,11 +77,12 @@ function loadTimers() {
   const queue = kit.getQueueFromInput(inputText);
   l(queue);
   queue.forEach((el, id) => {
-    timerQueue.push(new Timer(id, el.period, el.activity));
+    timerQueue.push(new Timer(id, el.secondsLeft, el.activity, kit.getFormattedTimeDisplay(el.secondsLeft)));
     id++;
   });
   // l('Queue is now:');
   // l(timerQueue);
+  showQueue();
 }
 
 document.getElementById('start').addEventListener('click', function(e) {

@@ -9,7 +9,7 @@ const kit = {
       const period = line.match(re)[2];
       return {
         activity: activity,
-        period: kit.parseTotalSeconds(period),
+        secondsLeft: kit.parseTotalSeconds(period),
       };
     });
     // removes falsy elements
@@ -74,9 +74,9 @@ const kit = {
   },
 
   getFormattedTimeDisplay(rawSeconds) {
-    return this.padWithZero(this.getHoursDisplay(rawSeconds))
-      + ':' + this.padWithZero(this.getMinutesDisplay(rawSeconds))
-      + ':' + this.padWithZero(this.getSecondsDisplay(rawSeconds));
+    return this.getHoursDisplay(rawSeconds)
+      + ':' + this.getMinutesDisplay(rawSeconds)
+      + ':' + this.getSecondsDisplay(rawSeconds);
   },
 
   durationInSeconds: {

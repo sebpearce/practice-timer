@@ -103,6 +103,27 @@
 	  updateActivityDisplay('');
 	}
 
+	function showQueue() {
+	  var queueDisplayContainer = document.createElement('div');
+	  queueDisplayContainer.className = 'queue-container';
+
+	  timerQueue.forEach(function (el) {
+	    var row = document.createElement('div');
+	    row.className = 'queue-row';
+	    var activity = document.createElement('span');
+	    activity.className = 'queue-row-activity';
+	    activity.appendChild(document.createTextNode(el.activity));
+	    var period = document.createElement('span');
+	    period.className = 'queue-row-period';
+	    period.appendChild(document.createTextNode(el.period));
+	    row.appendChild(activity);
+	    row.appendChild(period);
+	    queueDisplayContainer.appendChild(row);
+	  });
+
+	  document.body.appendChild(queueDisplayContainer);
+	}
+
 	function loadTimers() {
 	  // l('Queue was:');
 	  // l(timerQueue);
@@ -114,11 +135,12 @@
 	  var queue = _kit2.default.getQueueFromInput(inputText);
 	  l(queue);
 	  queue.forEach(function (el, id) {
-	    timerQueue.push(new _timer2.default(id, el.period, el.activity));
+	    timerQueue.push(new _timer2.default(id, el.secondsLeft, el.activity, _kit2.default.getFormattedTimeDisplay(el.secondsLeft)));
 	    id++;
 	  });
 	  // l('Queue is now:');
 	  // l(timerQueue);
+	  showQueue();
 	}
 
 	document.getElementById('start').addEventListener('click', function (e) {
@@ -164,7 +186,7 @@
 	      var period = line.match(re)[2];
 	      return {
 	        activity: activity,
-	        period: kit.parseTotalSeconds(period)
+	        secondsLeft: kit.parseTotalSeconds(period)
 	      };
 	    });
 	    // removes falsy elements
@@ -218,7 +240,7 @@
 	    return kit.padWithZero((rawSeconds - m * 60 - s) / 3600);
 	  },
 	  getFormattedTimeDisplay: function getFormattedTimeDisplay(rawSeconds) {
-	    return this.padWithZero(this.getHoursDisplay(rawSeconds)) + ':' + this.padWithZero(this.getMinutesDisplay(rawSeconds)) + ':' + this.padWithZero(this.getSecondsDisplay(rawSeconds));
+	    return this.getHoursDisplay(rawSeconds) + ':' + this.getMinutesDisplay(rawSeconds) + ':' + this.getSecondsDisplay(rawSeconds);
 	  },
 
 
@@ -245,11 +267,12 @@
 	  return new Date(startDate.getTime() + deltaInMs);
 	}
 
-	var Timer = function Timer(id, totalSeconds, activity) {
+	var Timer = function Timer(id, totalSeconds, activity, period) {
 	  var self = this;
 	  this.id = id;
 	  this.activity = activity || '';
 	  // this.totalSeconds = totalSeconds || 600;
+	  this.period = period;
 	  this.secondsLeft = totalSeconds || 10;
 	};
 
@@ -290,7 +313,7 @@
 
 
 	// module
-	exports.push([module.id, "body {\n  color: #444;\n  font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif; }\n\n.inputbox {\n  display: block;\n  font-size: 21px;\n  height: 400px;\n  margin: 0 0 1em 0;\n  width: 400px; }\n\n.timer-display-container {\n  padding: 30px 0; }\n\n.timer-display {\n  display: none;\n  font-size: 100px;\n  font-weight: bold; }\n\n.timer-display-separator:after {\n  content: ':'; }\n\n.timer-display-activity {\n  display: block;\n  font-size: 30px;\n  height: 40px; }\n", ""]);
+	exports.push([module.id, "body {\n  color: #444;\n  font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif; }\n\n.inputbox {\n  display: block;\n  font-size: 21px;\n  height: 400px;\n  margin: 0 0 1em 0;\n  width: 400px; }\n\n.queue-row {\n  font-size: 20px; }\n\n.queue-row-activity,\n.queue-row-period {\n  display: inline-block; }\n\n.queue-row-activity {\n  width: 200px; }\n\n.queue-row-period {\n  width: 100px; }\n\n.timer-display-container {\n  padding: 30px 0; }\n\n.timer-display {\n  display: none;\n  font-size: 100px;\n  font-weight: bold; }\n\n.timer-display-separator:after {\n  content: ':'; }\n\n.timer-display-activity {\n  display: block;\n  font-size: 30px;\n  height: 40px; }\n", ""]);
 
 	// exports
 
