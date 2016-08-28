@@ -73,9 +73,9 @@ const kit = {
     return kit.padWithZero((rawSeconds - (m * 60) - s) / 3600);
   },
 
-  getFormattedTimeDisplay(rawSeconds) {
-    return this.getHoursDisplay(rawSeconds)
-      + ':' + this.getMinutesDisplay(rawSeconds)
+  getFormattedTimeDisplay(rawSeconds, includeHours) {
+    return (includeHours ? this.getHoursDisplay(rawSeconds) + ':' : '')
+      + this.getMinutesDisplay(rawSeconds)
       + ':' + this.getSecondsDisplay(rawSeconds);
   },
 

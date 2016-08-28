@@ -70,7 +70,6 @@
 	 * - Keyboard shortcuts
 	 * - "Time since finished" functionality/display
 	 * - Volume control (just use [audio element].volume)
-	 * - Don't show hour display if all timers in queue are below 60 min
 	 */
 
 	function l(x) {
@@ -85,12 +84,14 @@
 	window.practiceTimer.timerQueue = [];
 
 	document.addEventListener('DOMContentLoaded', function (e) {
-	  document.getElementById('inputbox').value = 'Scales 3s\nChords 2s\nPatterns 15m\nParty 00:30\nTimex 7\nThings 8:00\nStuff 45:20\nLol 08:30:42';
+	  document.getElementById('inputbox').value = 'Scales 3m\nChords 2s\nPatterns 15m\nParty 00:30\nTimex 7\nThings 8:00\nStuff 45:20\nLol 08:30:42';
 	  loadAudio();
 	});
 
 	function updateTimerDisplay(rawSeconds) {
-	  document.getElementById('timer-display-hr').innerHTML = _kit2.default.getHoursDisplay(rawSeconds);
+	  if (window.practiceTimer.timerQueue.hoursNeeded) {
+	    document.getElementById('timer-display-hr').innerHTML = _kit2.default.getHoursDisplay(rawSeconds);
+	  }
 	  document.getElementById('timer-display-min').innerHTML = _kit2.default.getMinutesDisplay(rawSeconds);
 	  document.getElementById('timer-display-sec').innerHTML = _kit2.default.getSecondsDisplay(rawSeconds);
 	}
@@ -106,6 +107,8 @@
 	function loadAudio() {
 	  window.practiceTimer.beep2 = document.getElementById('beep2');
 	  window.practiceTimer.beep4 = document.getElementById('beep4');
+	  window.practiceTimer.beep2.volume = 0.1;
+	  window.practiceTimer.beep4.volume = 0.1;
 	}
 
 	function playChangeSound() {
@@ -140,11 +143,33 @@
 	    activity.appendChild(document.createTextNode(el.activity));
 	    var period = document.createElement('span');
 	    period.className = 'queue-row-period';
-	    period.appendChild(document.createTextNode(el.period));
+	    period.appendChild(document.createTextNode(_kit2.default.getFormattedTimeDisplay(el.period, window.practiceTimer.timerQueue.hoursNeeded)));
 	    row.appendChild(activity);
 	    row.appendChild(period);
 	    window.practiceTimer.timerQueue[i].row = row;
 	    queueDisplayContainer.appendChild(row);
+	  });
+
+	  var totalSeconds = window.practiceTimer.timerQueue.reduce(function (total, cur) {
+	    return total + cur.period;
+	  }, 0);
+
+	  var totalRow = document.createElement('div');
+	  totalRow.className = 'queue-row-total';
+	  var totalRowActivity = document.createElement('span');
+	  totalRowActivity.className = 'queue-row-activity';
+	  totalRowActivity.appendChild(document.createTextNode('Total'));
+	  var totalRowPeriod = document.createElement('span');
+	  totalRowPeriod.className = 'queue-row-period';
+	  totalRowPeriod.appendChild(document.createTextNode(_kit2.default.getFormattedTimeDisplay(totalSeconds, totalSeconds >= 3600)));
+	  totalRow.appendChild(totalRowActivity);
+	  totalRow.appendChild(totalRowPeriod);
+	  queueDisplayContainer.appendChild(totalRow);
+	}
+
+	function checkIfHoursAreNeeded() {
+	  window.practiceTimer.timerQueue.forEach(function (el) {
+	    if (el.secondsLeft >= 3600) window.practiceTimer.timerQueue.hoursNeeded = true;
 	  });
 	}
 
@@ -152,14 +177,11 @@
 	  clearQueue();
 	  stopTimer();
 	  var inputText = document.getElementById('inputbox').value;
-	  var id = 1;
 	  var queue = _kit2.default.getQueueFromInput(inputText);
 	  l(queue);
 	  queue.forEach(function (el, id) {
-	    window.practiceTimer.timerQueue.push(new _timer2.default(id, el.secondsLeft, el.activity, _kit2.default.getFormattedTimeDisplay(el.secondsLeft)));
-	    id++;
+	    window.practiceTimer.timerQueue.push(new _timer2.default(el.secondsLeft, el.activity));
 	  });
-	  updateQueue();
 	}
 
 	function updateQueueDisplayRowHighlight(queueItem) {
@@ -183,6 +205,8 @@
 	function handleStartButtonClick(e) {
 
 	  loadTimers();
+	  checkIfHoursAreNeeded();
+	  updateQueue();
 	  if (window.practiceTimer.timerQueue.length === 0) return;
 	  var currentTimer = window.practiceTimer.timerQueue[0];
 	  updateTimerDisplay(currentTimer.secondsLeft);
@@ -283,8 +307,8 @@
 	    var m = (rawSeconds - s) / 60 % 60;
 	    return kit.padWithZero((rawSeconds - m * 60 - s) / 3600);
 	  },
-	  getFormattedTimeDisplay: function getFormattedTimeDisplay(rawSeconds) {
-	    return this.getHoursDisplay(rawSeconds) + ':' + this.getMinutesDisplay(rawSeconds) + ':' + this.getSecondsDisplay(rawSeconds);
+	  getFormattedTimeDisplay: function getFormattedTimeDisplay(rawSeconds, includeHours) {
+	    return (includeHours ? this.getHoursDisplay(rawSeconds) + ':' : '') + this.getMinutesDisplay(rawSeconds) + ':' + this.getSecondsDisplay(rawSeconds);
 	  },
 
 
@@ -325,13 +349,11 @@
 	  return new Date(startDate.getTime() + deltaInMs);
 	}
 
-	var Timer = function Timer(id, totalSeconds, activity, period) {
+	var Timer = function Timer(period, activity) {
 	  var self = this;
-	  this.id = id;
 	  this.activity = activity || '';
-	  // this.totalSeconds = totalSeconds || 600;
-	  this.period = period;
-	  this.secondsLeft = totalSeconds || 10;
+	  this.period = period || 600;
+	  this.secondsLeft = period || 600;
 	};
 
 	exports.default = Timer;
@@ -371,7 +393,7 @@
 
 
 	// module
-	exports.push([module.id, "body {\n  color: #444;\n  font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif; }\n\n.inputbox {\n  display: block;\n  font-size: 21px;\n  height: 400px;\n  margin: 0 0 1em 0;\n  width: 400px; }\n\n.-running {\n  color: red; }\n\n.queue-row {\n  font-size: 20px; }\n\n.queue-row-activity,\n.queue-row-period {\n  display: inline-block; }\n\n.queue-row-activity {\n  width: 200px; }\n\n.queue-row-period {\n  width: 100px; }\n\n.timer-display-container {\n  padding: 30px 0; }\n\n.timer-display {\n  display: none;\n  font-size: 100px;\n  font-weight: bold; }\n\n.timer-display-separator {\n  font-size: 40px;\n  padding-right: 20px; }\n\n.timer-display-activity {\n  display: block;\n  font-size: 30px;\n  height: 40px; }\n", ""]);
+	exports.push([module.id, "body {\n  color: #444;\n  font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif; }\n\n.inputbox {\n  display: block;\n  font-size: 21px;\n  height: 400px;\n  margin: 0 0 1em 0;\n  width: 400px; }\n\n.-running {\n  color: red; }\n\n.queue-row,\n.queue-row-total {\n  font-size: 20px; }\n\n.queue-row-total {\n  padding-top: 1em; }\n\n.queue-row-total .queue-row-activity,\n.queue-row-total .queue-row-period {\n  font-weight: bold; }\n\n.queue-row-activity,\n.queue-row-period {\n  display: inline-block; }\n\n.queue-row-activity {\n  width: 200px; }\n\n.queue-row-period {\n  min-width: 100px;\n  text-align: right; }\n\n.timer-display-container {\n  padding: 30px 0; }\n\n.timer-display {\n  display: none;\n  font-size: 100px;\n  font-weight: bold; }\n\n.timer-display-separator:after {\n  content: ':'; }\n\n.timer-display-activity {\n  display: block;\n  font-size: 50px;\n  font-weight: 400;\n  height: 40px; }\n", ""]);
 
 	// exports
 

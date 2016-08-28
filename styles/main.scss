@@ -18,8 +18,20 @@ body {
 .queue-container {
 }
 
-.queue-row {
+.queue-row,
+.queue-row-total {
   font-size: 20px;
+}
+
+.queue-row-total {
+  padding-top: 1em;
+}
+
+.queue-row-total {
+  .queue-row-activity,
+  .queue-row-period {
+    font-weight: bold;
+  }
 }
 
 .queue-row-activity,
@@ -32,7 +44,8 @@ body {
 }
 
 .queue-row-period {
-  width: 100px;
+  min-width: 100px;
+  text-align: right;
 }
 
 .timer-display-container {
@@ -45,18 +58,14 @@ body {
   font-weight: bold;
 }
 
-.timer-display-separator {
-  font-size: 40px;
-  padding-right: 20px;
-}
-
 .timer-display-separator:after {
-  // content: ':';
+  content: ':';
 }
 
 .timer-display-activity {
   display: block;
-  font-size: 30px;
+  font-size: 50px;
+  font-weight: 400;
   height: 40px;
 }
 

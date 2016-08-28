@@ -8,7 +8,6 @@
  * - Keyboard shortcuts
  * - "Time since finished" functionality/display
  * - Volume control (just use [audio element].volume)
- * - Don't show hour display if all timers in queue are below 60 min
  */
 
 function l(x) {
@@ -27,12 +26,14 @@ window.practiceTimer = {};
 window.practiceTimer.timerQueue = [];
 
 document.addEventListener('DOMContentLoaded', function(e) {
-  document.getElementById('inputbox').value = 'Scales 3s\nChords 2s\nPatterns 15m\nParty 00:30\nTimex 7\nThings 8:00\nStuff 45:20\nLol 08:30:42';
+  document.getElementById('inputbox').value = 'Scales 3m\nChords 2s\nPatterns 15m\nParty 00:30\nTimex 7\nThings 8:00\nStuff 45:20\nLol 08:30:42';
   loadAudio();
 });
 
 function updateTimerDisplay(rawSeconds) {
-  document.getElementById('timer-display-hr').innerHTML = kit.getHoursDisplay(rawSeconds);
+  if (window.practiceTimer.timerQueue.hoursNeeded) {
+    document.getElementById('timer-display-hr').innerHTML = kit.getHoursDisplay(rawSeconds);
+  }
   document.getElementById('timer-display-min').innerHTML = kit.getMinutesDisplay(rawSeconds);
   document.getElementById('timer-display-sec').innerHTML = kit.getSecondsDisplay(rawSeconds);
 }
@@ -48,6 +49,8 @@ function showTimerDisplay() {
 function loadAudio() {
   window.practiceTimer.beep2 = document.getElementById('beep2');
   window.practiceTimer.beep4 = document.getElementById('beep4');
+  window.practiceTimer.beep2.volume = 0.1;
+  window.practiceTimer.beep4.volume = 0.1;
 }
 
 function playChangeSound() {
@@ -82,11 +85,33 @@ function updateQueue() {
     activity.appendChild(document.createTextNode(el.activity));
     const period = document.createElement('span');
     period.className = 'queue-row-period';
-    period.appendChild(document.createTextNode(el.period));
+    period.appendChild(document.createTextNode(kit.getFormattedTimeDisplay(el.period, window.practiceTimer.timerQueue.hoursNeeded)));
     row.appendChild(activity);
     row.appendChild(period);
     window.practiceTimer.timerQueue[i].row = row;
     queueDisplayContainer.appendChild(row);
+  });
+
+  const totalSeconds = window.practiceTimer.timerQueue.reduce((total, cur) => {
+    return total + cur.period;
+  }, 0);
+
+  const totalRow = document.createElement('div');
+  totalRow.className = 'queue-row-total';
+  const totalRowActivity = document.createElement('span');
+  totalRowActivity.className = 'queue-row-activity';
+  totalRowActivity.appendChild(document.createTextNode('Total'));
+  const totalRowPeriod = document.createElement('span');
+  totalRowPeriod.className = 'queue-row-period';
+  totalRowPeriod.appendChild(document.createTextNode(kit.getFormattedTimeDisplay(totalSeconds, totalSeconds >= 3600)));
+  totalRow.appendChild(totalRowActivity);
+  totalRow.appendChild(totalRowPeriod);
+  queueDisplayContainer.appendChild(totalRow);
+}
+
+function checkIfHoursAreNeeded() {
+  window.practiceTimer.timerQueue.forEach((el) => {
+    if (el.secondsLeft >= 3600) window.practiceTimer.timerQueue.hoursNeeded = true;
   });
 }
 
@@ -94,14 +119,11 @@ function loadTimers() {
   clearQueue();
   stopTimer();
   const inputText = document.getElementById('inputbox').value;
-  const id = 1;
   const queue = kit.getQueueFromInput(inputText);
   l(queue);
   queue.forEach((el, id) => {
-    window.practiceTimer.timerQueue.push(new Timer(id, el.secondsLeft, el.activity, kit.getFormattedTimeDisplay(el.secondsLeft)));
-    id++;
+    window.practiceTimer.timerQueue.push(new Timer(el.secondsLeft, el.activity));
   });
-  updateQueue();
 }
 
 function updateQueueDisplayRowHighlight(queueItem) {
@@ -125,6 +147,8 @@ function finishIfQueueIsEmpty() {
 function handleStartButtonClick(e) {
 
   loadTimers();
+  checkIfHoursAreNeeded();
+  updateQueue();
   if (window.practiceTimer.timerQueue.length === 0) return;
   let currentTimer = window.practiceTimer.timerQueue[0];
   updateTimerDisplay(currentTimer.secondsLeft);
