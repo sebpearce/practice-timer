@@ -1,9 +1,10 @@
 /* TODO:
  *
+ * - Settings link/modal
+ *   Option to flash screen on change
  * - Display start time and finish time for logging purposes
  * - Total time display (total time showing as you type in the input, total time remaining countdown)
  * - Skip button to skip current stage
- * - Pause functionality
  * - Local storage to remember textarea data
  * - Beautify CSS
  * - Keyboard shortcuts
@@ -25,6 +26,7 @@ import Timer from './timer';
 import styles from '../styles/main.scss';
 
 window.practiceTimer = {};
+window.practiceTimer.paused = false;
 window.practiceTimer.timerQueue = [];
 
 document.addEventListener('DOMContentLoaded', function(e) {
@@ -167,20 +169,29 @@ function handleKeyDown(e) {
   }
 }
 
-function startTimer() {
+function handlePauseButtonClick(e) {
+  if (window.practiceTimer.paused) {
+    unpauseTimer();
+    return;
+  }
+  pauseTimer();
+}
 
-  loadTimers();
-  checkIfHoursAreNeeded();
-  updateQueue();
-  if (window.practiceTimer.timerQueue.length === 0) return;
+function pauseTimer() {
+  clearInterval(window.practiceTimer.timerLoop);
+  window.practiceTimer.paused = true;
+  document.getElementById('pause').innerHTML = 'Resume';
+}
+
+function unpauseTimer() {
+  startTimerLoop();
+}
+
+function startTimerLoop() {
+  window.practiceTimer.paused = false;
+  document.getElementById('pause').innerHTML = 'Pause';
   let currentTimer = window.practiceTimer.timerQueue[0];
-  updateTimerDisplay(currentTimer.secondsLeft);
-  updateActivityDisplay(currentTimer.activity);
-  updateQueueDisplayRowHighlight(currentTimer);
-  showTimerDisplay();
-
   window.practiceTimer.timerLoop = setInterval(() => {
-
     if (currentTimer.secondsLeft > 0) {
       currentTimer.secondsLeft -= 1;
       updateTimerDisplay(currentTimer.secondsLeft);
@@ -196,7 +207,19 @@ function startTimer() {
       }
     }
   }, 1000);
+}
 
+function startTimer() {
+  loadTimers();
+  checkIfHoursAreNeeded();
+  updateQueue();
+  if (window.practiceTimer.timerQueue.length === 0) return;
+  let currentTimer = window.practiceTimer.timerQueue[0];
+  updateTimerDisplay(currentTimer.secondsLeft);
+  updateActivityDisplay(currentTimer.activity);
+  updateQueueDisplayRowHighlight(currentTimer);
+  showTimerDisplay();
+  startTimerLoop();
 }
 
 function handleStartButtonClick(e) {
@@ -204,6 +227,7 @@ function handleStartButtonClick(e) {
 }
 
 document.getElementById('start').addEventListener('click', handleStartButtonClick);
+document.getElementById('pause').addEventListener('click', handlePauseButtonClick);
 document.getElementById('inputbox').addEventListener('keyup', handleKeyUp);
 document.getElementById('inputbox').addEventListener('keydown', handleKeyDown);
 

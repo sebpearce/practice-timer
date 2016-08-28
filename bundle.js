@@ -62,10 +62,11 @@
 
 	/* TODO:
 	 *
+	 * - Settings link/modal
+	 *   Option to flash screen on change
 	 * - Display start time and finish time for logging purposes
 	 * - Total time display (total time showing as you type in the input, total time remaining countdown)
 	 * - Skip button to skip current stage
-	 * - Pause functionality
 	 * - Local storage to remember textarea data
 	 * - Beautify CSS
 	 * - Keyboard shortcuts
@@ -83,6 +84,7 @@
 	}
 
 	window.practiceTimer = {};
+	window.practiceTimer.paused = false;
 	window.practiceTimer.timerQueue = [];
 
 	document.addEventListener('DOMContentLoaded', function (e) {
@@ -225,20 +227,29 @@
 	  }
 	}
 
-	function startTimer() {
+	function handlePauseButtonClick(e) {
+	  if (window.practiceTimer.paused) {
+	    unpauseTimer();
+	    return;
+	  }
+	  pauseTimer();
+	}
 
-	  loadTimers();
-	  checkIfHoursAreNeeded();
-	  updateQueue();
-	  if (window.practiceTimer.timerQueue.length === 0) return;
+	function pauseTimer() {
+	  clearInterval(window.practiceTimer.timerLoop);
+	  window.practiceTimer.paused = true;
+	  document.getElementById('pause').innerHTML = 'Resume';
+	}
+
+	function unpauseTimer() {
+	  startTimerLoop();
+	}
+
+	function startTimerLoop() {
+	  window.practiceTimer.paused = false;
+	  document.getElementById('pause').innerHTML = 'Pause';
 	  var currentTimer = window.practiceTimer.timerQueue[0];
-	  updateTimerDisplay(currentTimer.secondsLeft);
-	  updateActivityDisplay(currentTimer.activity);
-	  updateQueueDisplayRowHighlight(currentTimer);
-	  showTimerDisplay();
-
 	  window.practiceTimer.timerLoop = setInterval(function () {
-
 	    if (currentTimer.secondsLeft > 0) {
 	      currentTimer.secondsLeft -= 1;
 	      updateTimerDisplay(currentTimer.secondsLeft);
@@ -256,11 +267,25 @@
 	  }, 1000);
 	}
 
+	function startTimer() {
+	  loadTimers();
+	  checkIfHoursAreNeeded();
+	  updateQueue();
+	  if (window.practiceTimer.timerQueue.length === 0) return;
+	  var currentTimer = window.practiceTimer.timerQueue[0];
+	  updateTimerDisplay(currentTimer.secondsLeft);
+	  updateActivityDisplay(currentTimer.activity);
+	  updateQueueDisplayRowHighlight(currentTimer);
+	  showTimerDisplay();
+	  startTimerLoop();
+	}
+
 	function handleStartButtonClick(e) {
 	  startTimer();
 	}
 
 	document.getElementById('start').addEventListener('click', handleStartButtonClick);
+	document.getElementById('pause').addEventListener('click', handlePauseButtonClick);
 	document.getElementById('inputbox').addEventListener('keyup', handleKeyUp);
 	document.getElementById('inputbox').addEventListener('keydown', handleKeyDown);
 
@@ -422,7 +447,7 @@
 
 
 	// module
-	exports.push([module.id, "body {\n  color: #444;\n  font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif; }\n\n.inputbox {\n  display: block;\n  font-size: 21px;\n  height: 400px;\n  margin: 0 0 1em 0;\n  width: 400px; }\n\n.-running {\n  color: red; }\n\n.queue-row,\n.queue-row-total {\n  font-size: 20px; }\n\n.queue-row-total {\n  padding-top: 1em; }\n\n.queue-row-total .queue-row-activity,\n.queue-row-total .queue-row-period {\n  font-weight: bold; }\n\n.queue-row-activity,\n.queue-row-period {\n  display: inline-block; }\n\n.queue-row-activity {\n  width: 200px; }\n\n.queue-row-period {\n  min-width: 100px;\n  text-align: right; }\n\n.timer-display-container {\n  padding: 30px 0; }\n\n.timer-display {\n  display: none;\n  font-size: 100px;\n  font-weight: bold; }\n\n.timer-display-separator:after {\n  content: ':'; }\n\n.timer-display-activity {\n  display: block;\n  font-size: 50px;\n  font-weight: 400;\n  height: 40px; }\n\n.total-preview {\n  display: block;\n  padding: 0 0 1em 0; }\n", ""]);
+	exports.push([module.id, "body {\n  color: #444;\n  font-family: \"Open Sans\", \"Helvetica Neue\", \"Helvetica\", \"Arial\", sans-serif; }\n\n.inputbox {\n  display: block;\n  font-family: \"Open Sans\", \"Helvetica Neue\", \"Helvetica\", \"Arial\", sans-serif;\n  font-size: 21px;\n  height: 400px;\n  margin: 0 0 1em 0;\n  width: 400px; }\n\n.-running {\n  color: red; }\n\n.queue-row,\n.queue-row-total {\n  font-size: 20px; }\n\n.queue-row-total {\n  padding-top: 1em; }\n\n.queue-row-total .queue-row-activity,\n.queue-row-total .queue-row-period {\n  font-weight: bold; }\n\n.queue-row-activity,\n.queue-row-period {\n  display: inline-block; }\n\n.queue-row-activity {\n  width: 200px; }\n\n.queue-row-period {\n  min-width: 100px;\n  text-align: right; }\n\n.timer-display-container {\n  padding: 30px 0; }\n\n.timer-display {\n  display: none;\n  font-size: 100px;\n  font-weight: bold; }\n\n.timer-display-separator:after {\n  content: ':'; }\n\n.timer-display-activity {\n  display: block;\n  font-size: 50px;\n  font-weight: 400;\n  height: 40px; }\n\n.total-preview {\n  display: block;\n  padding: 0 0 1em 0; }\n", ""]);
 
 	// exports
 
