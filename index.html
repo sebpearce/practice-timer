@@ -12,14 +12,22 @@
     <div class="timer-display-container">
       <div id="timer-display" class="timer-display">
         <span id="timer-display-activity" class="timer-display-activity"></span>
-        <span id="timer-display-hr" class="timer-display-hr">00</span><span class="timer-display-separator"></span><span id="timer-display-min" class="timer-display-min">00</span><span class="timer-display-separator"></span><span id="timer-display-sec" class="timer-display-sec">00</span>
+        <span id="timer-display-hr-section"><span id="timer-display-hr" class="timer-display-hr"></span><span class="timer-display-separator"></span></span><span id="timer-display-min" class="timer-display-min">00</span><span class="timer-display-separator"></span><span id="timer-display-sec" class="timer-display-sec">00</span>
       </div>
     </div>
+    <span id="start-time-container" class="start-time-container">
+      <label for="start-time">Started at:</label>
+      <span id="start-time" class="start-time"></span>
+    </span>
     <div class="queue">
       <h2 class="queue-heading">Queue</h2>
       <div id="queue-container">
       </div>
     </div>
+    <span id="finish-time-container" class="finish-time-container">
+      <label for="finish-time">Finished at:</label>
+      <span id="finish-time" class="finish-time"></span>
+    </span>
     <audio id="beep2" src="sounds/beep2.mp3" preload="auto" hidden>
     <audio id="beep4" src="sounds/beep4.mp3" preload="auto" hidden>
     <script src="bundle.js"></script>

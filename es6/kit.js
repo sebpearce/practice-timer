@@ -85,6 +85,10 @@ const kit = {
     's': 1,
   },
 
+  formatDateAsClockTime(date) {
+    return this.padWithZero(date.getHours()) + ':' + this.padWithZero(date.getMinutes());
+  },
+
   // hasClas, addClass & removeClass taken from
   // http://jaketrent.com/post/addremove-classes-raw-javascript/
   hasClass(el, className) {

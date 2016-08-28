@@ -1,8 +1,7 @@
 /* TODO:
  *
  * - Settings link/modal
- *   Option to flash screen on change
- * - Display start time and finish time for logging purposes
+ * - Option to flash screen on change
  * - Total time display (total time showing as you type in the input, total time remaining countdown)
  * - Skip button to skip current stage
  * - Local storage to remember textarea data
@@ -49,6 +48,28 @@ function updateActivityDisplay(activity) {
 
 function showTimerDisplay() {
   document.getElementById('timer-display').style.display = 'block';
+}
+
+function hideFinishTime() {
+  document.getElementById('finish-time-container').style.display = 'none';
+}
+
+function hideStartTime() {
+  document.getElementById('start-time-container').style.display = 'none';
+}
+
+function logStartTime() {
+  const now = new Date();
+  window.practiceTimer.startedAt = now;
+  document.getElementById('start-time').innerHTML = kit.formatDateAsClockTime(window.practiceTimer.startedAt);
+  document.getElementById('start-time-container').style.display = 'block';
+}
+
+function logFinishTime() {
+  const now = new Date();
+  window.practiceTimer.finishedAt = now;
+  document.getElementById('finish-time').innerHTML = kit.formatDateAsClockTime(window.practiceTimer.finishedAt);
+  document.getElementById('finish-time-container').style.display = 'block';
 }
 
 function loadAudio() {
@@ -114,10 +135,11 @@ function updateQueue() {
   queueDisplayContainer.appendChild(totalRow);
 }
 
-function checkIfHoursAreNeeded() {
+function hideHoursIfNotNeeded() {
   window.practiceTimer.timerQueue.forEach((el) => {
     if (el.secondsLeft >= 3600) window.practiceTimer.timerQueue.hoursNeeded = true;
   });
+  document.getElementById('timer-display-hr-section').style.display = window.practiceTimer.timerQueue.hoursNeeded ? 'inline' : 'none';
 }
 
 function loadTimers() {
@@ -125,7 +147,6 @@ function loadTimers() {
   stopTimer();
   const inputText = document.getElementById('inputbox').value;
   const queue = kit.getQueueFromInput(inputText);
-  l(queue);
   queue.forEach((el, id) => {
     window.practiceTimer.timerQueue.push(new Timer(el.period, el.activity));
   });
@@ -144,6 +165,7 @@ function finishIfQueueIsEmpty() {
     stopTimer();
     updateQueueDisplayRowHighlight();
     l('Finished!');
+    logFinishTime();
     return true;
   }
   return false;
@@ -157,6 +179,14 @@ function updateTotalPreview() {
     return total + cur.period;
   }, 0);
   prev.innerHTML = kit.getFormattedTimeDisplay(total, total >= 3600);
+}
+
+function showHourDisplay() {
+  document.getElementById('timer-display-hr-section').style.display = 'inline';
+}
+
+function hideHourDisplay() {
+  document.getElementById('timer-display-hr-section').style.display = 'none';
 }
 
 function handleKeyUp(e) {
@@ -210,8 +240,9 @@ function startTimerLoop() {
 }
 
 function startTimer() {
+  hideFinishTime();
   loadTimers();
-  checkIfHoursAreNeeded();
+  hideHoursIfNotNeeded();
   updateQueue();
   if (window.practiceTimer.timerQueue.length === 0) return;
   let currentTimer = window.practiceTimer.timerQueue[0];
@@ -219,6 +250,7 @@ function startTimer() {
   updateActivityDisplay(currentTimer.activity);
   updateQueueDisplayRowHighlight(currentTimer);
   showTimerDisplay();
+  logStartTime();
   startTimerLoop();
 }
 

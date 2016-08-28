@@ -63,8 +63,7 @@
 	/* TODO:
 	 *
 	 * - Settings link/modal
-	 *   Option to flash screen on change
-	 * - Display start time and finish time for logging purposes
+	 * - Option to flash screen on change
 	 * - Total time display (total time showing as you type in the input, total time remaining countdown)
 	 * - Skip button to skip current stage
 	 * - Local storage to remember textarea data
@@ -107,6 +106,28 @@
 
 	function showTimerDisplay() {
 	  document.getElementById('timer-display').style.display = 'block';
+	}
+
+	function hideFinishTime() {
+	  document.getElementById('finish-time-container').style.display = 'none';
+	}
+
+	function hideStartTime() {
+	  document.getElementById('start-time-container').style.display = 'none';
+	}
+
+	function logStartTime() {
+	  var now = new Date();
+	  window.practiceTimer.startedAt = now;
+	  document.getElementById('start-time').innerHTML = _kit2.default.formatDateAsClockTime(window.practiceTimer.startedAt);
+	  document.getElementById('start-time-container').style.display = 'block';
+	}
+
+	function logFinishTime() {
+	  var now = new Date();
+	  window.practiceTimer.finishedAt = now;
+	  document.getElementById('finish-time').innerHTML = _kit2.default.formatDateAsClockTime(window.practiceTimer.finishedAt);
+	  document.getElementById('finish-time-container').style.display = 'block';
 	}
 
 	function loadAudio() {
@@ -172,10 +193,11 @@
 	  queueDisplayContainer.appendChild(totalRow);
 	}
 
-	function checkIfHoursAreNeeded() {
+	function hideHoursIfNotNeeded() {
 	  window.practiceTimer.timerQueue.forEach(function (el) {
 	    if (el.secondsLeft >= 3600) window.practiceTimer.timerQueue.hoursNeeded = true;
 	  });
+	  document.getElementById('timer-display-hr-section').style.display = window.practiceTimer.timerQueue.hoursNeeded ? 'inline' : 'none';
 	}
 
 	function loadTimers() {
@@ -183,7 +205,6 @@
 	  stopTimer();
 	  var inputText = document.getElementById('inputbox').value;
 	  var queue = _kit2.default.getQueueFromInput(inputText);
-	  l(queue);
 	  queue.forEach(function (el, id) {
 	    window.practiceTimer.timerQueue.push(new _timer2.default(el.period, el.activity));
 	  });
@@ -202,6 +223,7 @@
 	    stopTimer();
 	    updateQueueDisplayRowHighlight();
 	    l('Finished!');
+	    logFinishTime();
 	    return true;
 	  }
 	  return false;
@@ -215,6 +237,14 @@
 	    return total + cur.period;
 	  }, 0);
 	  prev.innerHTML = _kit2.default.getFormattedTimeDisplay(total, total >= 3600);
+	}
+
+	function showHourDisplay() {
+	  document.getElementById('timer-display-hr-section').style.display = 'inline';
+	}
+
+	function hideHourDisplay() {
+	  document.getElementById('timer-display-hr-section').style.display = 'none';
 	}
 
 	function handleKeyUp(e) {
@@ -268,8 +298,9 @@
 	}
 
 	function startTimer() {
+	  hideFinishTime();
 	  loadTimers();
-	  checkIfHoursAreNeeded();
+	  hideHoursIfNotNeeded();
 	  updateQueue();
 	  if (window.practiceTimer.timerQueue.length === 0) return;
 	  var currentTimer = window.practiceTimer.timerQueue[0];
@@ -277,6 +308,7 @@
 	  updateActivityDisplay(currentTimer.activity);
 	  updateQueueDisplayRowHighlight(currentTimer);
 	  showTimerDisplay();
+	  logStartTime();
 	  startTimerLoop();
 	}
 
@@ -372,6 +404,11 @@
 	    's': 1
 	  },
 
+	  formatDateAsClockTime: function formatDateAsClockTime(date) {
+	    return this.padWithZero(date.getHours()) + ':' + this.padWithZero(date.getMinutes());
+	  },
+
+
 	  // hasClas, addClass & removeClass taken from
 	  // http://jaketrent.com/post/addremove-classes-raw-javascript/
 	  hasClass: function hasClass(el, className) {
@@ -447,7 +484,7 @@
 
 
 	// module
-	exports.push([module.id, "body {\n  color: #444;\n  font-family: \"Open Sans\", \"Helvetica Neue\", \"Helvetica\", \"Arial\", sans-serif; }\n\n.inputbox {\n  display: block;\n  font-family: \"Open Sans\", \"Helvetica Neue\", \"Helvetica\", \"Arial\", sans-serif;\n  font-size: 21px;\n  height: 400px;\n  margin: 0 0 1em 0;\n  width: 400px; }\n\n.-running {\n  color: red; }\n\n.queue-row,\n.queue-row-total {\n  font-size: 20px; }\n\n.queue-row-total {\n  padding-top: 1em; }\n\n.queue-row-total .queue-row-activity,\n.queue-row-total .queue-row-period {\n  font-weight: bold; }\n\n.queue-row-activity,\n.queue-row-period {\n  display: inline-block; }\n\n.queue-row-activity {\n  width: 200px; }\n\n.queue-row-period {\n  min-width: 100px;\n  text-align: right; }\n\n.timer-display-container {\n  padding: 30px 0; }\n\n.timer-display {\n  display: none;\n  font-size: 100px;\n  font-weight: bold; }\n\n.timer-display-separator:after {\n  content: ':'; }\n\n.timer-display-activity {\n  display: block;\n  font-size: 50px;\n  font-weight: 400;\n  height: 40px; }\n\n.total-preview {\n  display: block;\n  padding: 0 0 1em 0; }\n", ""]);
+	exports.push([module.id, "body {\n  color: #444;\n  font-family: \"Open Sans\", \"Helvetica Neue\", \"Helvetica\", \"Arial\", sans-serif; }\n\n.inputbox {\n  display: block;\n  font-family: \"Open Sans\", \"Helvetica Neue\", \"Helvetica\", \"Arial\", sans-serif;\n  font-size: 21px;\n  height: 400px;\n  margin: 0 0 1em 0;\n  width: 400px; }\n\n.start-time-container,\n.finish-time-container {\n  display: none; }\n\nlabel[for='start-time'],\nlabel[for='finish-time'] {\n  display: inline-block;\n  width: 100px; }\n\n.-running {\n  color: red; }\n\n.queue {\n  margin: 1em 0; }\n\n.queue-row,\n.queue-row-total {\n  font-size: 20px; }\n\n.queue-row-total {\n  padding-top: 1em; }\n\n.queue-row-total .queue-row-activity,\n.queue-row-total .queue-row-period {\n  font-weight: bold; }\n\n.queue-row-activity,\n.queue-row-period {\n  display: inline-block; }\n\n.queue-row-activity {\n  width: 200px; }\n\n.queue-row-period {\n  min-width: 100px;\n  text-align: right; }\n\n.timer-display-container {\n  padding: 30px 0; }\n\n.timer-display {\n  display: none;\n  font-size: 100px;\n  font-weight: bold; }\n\n.timer-display-separator:after {\n  content: ':'; }\n\n.timer-display-activity {\n  display: block;\n  font-size: 50px;\n  font-weight: 400;\n  height: 40px; }\n\n.total-preview {\n  display: block;\n  padding: 0 0 1em 0; }\n", ""]);
 
 	// exports
 

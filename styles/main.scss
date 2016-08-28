@@ -14,8 +14,23 @@ body {
   width: 400px;
 }
 
+.start-time-container,
+.finish-time-container {
+  display: none;
+}
+
+label[for='start-time'],
+label[for='finish-time'] {
+  display: inline-block;
+  width: 100px;
+}
+
 .-running {
   color: red;
+}
+
+.queue {
+  margin: 1em 0;
 }
 
 .queue-container {
