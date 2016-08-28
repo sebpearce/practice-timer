@@ -1,6 +1,7 @@
 /* TODO:
  *
- * - Total time display (both total time under queue and total time remaining countdown)
+ * - Display start time and finish time for logging purposes
+ * - Total time display (total time showing as you type in the input, total time remaining countdown)
  * - Skip button to skip current stage
  * - Pause functionality
  * - Local storage to remember textarea data
@@ -8,6 +9,7 @@
  * - Keyboard shortcuts
  * - "Time since finished" functionality/display
  * - Volume control (just use [audio element].volume)
+ * - Ability to enter 2m30s
  */
 
 function l(x) {
@@ -27,6 +29,7 @@ window.practiceTimer.timerQueue = [];
 
 document.addEventListener('DOMContentLoaded', function(e) {
   document.getElementById('inputbox').value = 'Scales 3m\nChords 2s\nPatterns 15m\nParty 00:30\nTimex 7\nThings 8:00\nStuff 45:20\nLol 08:30:42';
+  updateTotalPreview();
   loadAudio();
 });
 
@@ -122,7 +125,7 @@ function loadTimers() {
   const queue = kit.getQueueFromInput(inputText);
   l(queue);
   queue.forEach((el, id) => {
-    window.practiceTimer.timerQueue.push(new Timer(el.secondsLeft, el.activity));
+    window.practiceTimer.timerQueue.push(new Timer(el.period, el.activity));
   });
 }
 
@@ -144,7 +147,27 @@ function finishIfQueueIsEmpty() {
   return false;
 }
 
-function handleStartButtonClick(e) {
+function updateTotalPreview() {
+  const prev = document.getElementById('total-preview');
+  const inputBox = document.getElementById('inputbox');
+  const queue = kit.getQueueFromInput(inputBox.value);
+  const total = queue.reduce((total, cur) => {
+    return total + cur.period;
+  }, 0);
+  prev.innerHTML = kit.getFormattedTimeDisplay(total, total >= 3600);
+}
+
+function handleKeyUp(e) {
+  updateTotalPreview();
+}
+
+function handleKeyDown(e) {
+  if (e.metaKey && e.keyCode == 13) {
+    startTimer();
+  }
+}
+
+function startTimer() {
 
   loadTimers();
   checkIfHoursAreNeeded();
@@ -173,8 +196,15 @@ function handleStartButtonClick(e) {
       }
     }
   }, 1000);
+
+}
+
+function handleStartButtonClick(e) {
+  startTimer();
 }
 
 document.getElementById('start').addEventListener('click', handleStartButtonClick);
+document.getElementById('inputbox').addEventListener('keyup', handleKeyUp);
+document.getElementById('inputbox').addEventListener('keydown', handleKeyDown);
 
 

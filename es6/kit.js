@@ -9,7 +9,7 @@ const kit = {
       const period = line.match(re)[2];
       return {
         activity: activity,
-        secondsLeft: kit.parseTotalSeconds(period),
+        period: kit.parseTotalSeconds(period),
       };
     });
     // removes falsy elements

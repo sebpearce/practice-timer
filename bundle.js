@@ -62,7 +62,8 @@
 
 	/* TODO:
 	 *
-	 * - Total time display (both total time under queue and total time remaining countdown)
+	 * - Display start time and finish time for logging purposes
+	 * - Total time display (total time showing as you type in the input, total time remaining countdown)
 	 * - Skip button to skip current stage
 	 * - Pause functionality
 	 * - Local storage to remember textarea data
@@ -70,6 +71,7 @@
 	 * - Keyboard shortcuts
 	 * - "Time since finished" functionality/display
 	 * - Volume control (just use [audio element].volume)
+	 * - Ability to enter 2m30s
 	 */
 
 	function l(x) {
@@ -85,6 +87,7 @@
 
 	document.addEventListener('DOMContentLoaded', function (e) {
 	  document.getElementById('inputbox').value = 'Scales 3m\nChords 2s\nPatterns 15m\nParty 00:30\nTimex 7\nThings 8:00\nStuff 45:20\nLol 08:30:42';
+	  updateTotalPreview();
 	  loadAudio();
 	});
 
@@ -180,7 +183,7 @@
 	  var queue = _kit2.default.getQueueFromInput(inputText);
 	  l(queue);
 	  queue.forEach(function (el, id) {
-	    window.practiceTimer.timerQueue.push(new _timer2.default(el.secondsLeft, el.activity));
+	    window.practiceTimer.timerQueue.push(new _timer2.default(el.period, el.activity));
 	  });
 	}
 
@@ -202,7 +205,27 @@
 	  return false;
 	}
 
-	function handleStartButtonClick(e) {
+	function updateTotalPreview() {
+	  var prev = document.getElementById('total-preview');
+	  var inputBox = document.getElementById('inputbox');
+	  var queue = _kit2.default.getQueueFromInput(inputBox.value);
+	  var total = queue.reduce(function (total, cur) {
+	    return total + cur.period;
+	  }, 0);
+	  prev.innerHTML = _kit2.default.getFormattedTimeDisplay(total, total >= 3600);
+	}
+
+	function handleKeyUp(e) {
+	  updateTotalPreview();
+	}
+
+	function handleKeyDown(e) {
+	  if (e.metaKey && e.keyCode == 13) {
+	    startTimer();
+	  }
+	}
+
+	function startTimer() {
 
 	  loadTimers();
 	  checkIfHoursAreNeeded();
@@ -233,7 +256,13 @@
 	  }, 1000);
 	}
 
+	function handleStartButtonClick(e) {
+	  startTimer();
+	}
+
 	document.getElementById('start').addEventListener('click', handleStartButtonClick);
+	document.getElementById('inputbox').addEventListener('keyup', handleKeyUp);
+	document.getElementById('inputbox').addEventListener('keydown', handleKeyDown);
 
 /***/ },
 /* 1 */
@@ -254,7 +283,7 @@
 	      var period = line.match(re)[2];
 	      return {
 	        activity: activity,
-	        secondsLeft: kit.parseTotalSeconds(period)
+	        period: kit.parseTotalSeconds(period)
 	      };
 	    });
 	    // removes falsy elements
@@ -393,7 +422,7 @@
 
 
 	// module
-	exports.push([module.id, "body {\n  color: #444;\n  font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif; }\n\n.inputbox {\n  display: block;\n  font-size: 21px;\n  height: 400px;\n  margin: 0 0 1em 0;\n  width: 400px; }\n\n.-running {\n  color: red; }\n\n.queue-row,\n.queue-row-total {\n  font-size: 20px; }\n\n.queue-row-total {\n  padding-top: 1em; }\n\n.queue-row-total .queue-row-activity,\n.queue-row-total .queue-row-period {\n  font-weight: bold; }\n\n.queue-row-activity,\n.queue-row-period {\n  display: inline-block; }\n\n.queue-row-activity {\n  width: 200px; }\n\n.queue-row-period {\n  min-width: 100px;\n  text-align: right; }\n\n.timer-display-container {\n  padding: 30px 0; }\n\n.timer-display {\n  display: none;\n  font-size: 100px;\n  font-weight: bold; }\n\n.timer-display-separator:after {\n  content: ':'; }\n\n.timer-display-activity {\n  display: block;\n  font-size: 50px;\n  font-weight: 400;\n  height: 40px; }\n", ""]);
+	exports.push([module.id, "body {\n  color: #444;\n  font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif; }\n\n.inputbox {\n  display: block;\n  font-size: 21px;\n  height: 400px;\n  margin: 0 0 1em 0;\n  width: 400px; }\n\n.-running {\n  color: red; }\n\n.queue-row,\n.queue-row-total {\n  font-size: 20px; }\n\n.queue-row-total {\n  padding-top: 1em; }\n\n.queue-row-total .queue-row-activity,\n.queue-row-total .queue-row-period {\n  font-weight: bold; }\n\n.queue-row-activity,\n.queue-row-period {\n  display: inline-block; }\n\n.queue-row-activity {\n  width: 200px; }\n\n.queue-row-period {\n  min-width: 100px;\n  text-align: right; }\n\n.timer-display-container {\n  padding: 30px 0; }\n\n.timer-display {\n  display: none;\n  font-size: 100px;\n  font-weight: bold; }\n\n.timer-display-separator:after {\n  content: ':'; }\n\n.timer-display-activity {\n  display: block;\n  font-size: 50px;\n  font-weight: 400;\n  height: 40px; }\n\n.total-preview {\n  display: block;\n  padding: 0 0 1em 0; }\n", ""]);
 
 	// exports
 
