@@ -2,14 +2,17 @@
  *
  * - Settings link/modal
  * - Option to flash screen on change
+ *   Option for count-in (e.g. 10 seconds)
+ * - Allow for 'sec', 'min' or 'hr' in input
+ * - Allow for input like 2m30s
+ * - Allow for decimals ilke 1.5h
  * - Total time display (total time showing as you type in the input, total time remaining countdown)
  * - Skip button to skip current stage
  * - Local storage to remember textarea data
  * - Beautify CSS
- * - Keyboard shortcuts
- * - "Time since finished" functionality/display
+ * - Keyboard shortcuts (pause = space or enter)
+ * - "Time since finished" functionality/display (timer keeps counting after finished)
  * - Volume control (just use [audio element].volume)
- * - Ability to enter 2m30s
  */
 
 function l(x) {
@@ -27,6 +30,8 @@ import styles from '../styles/main.scss';
 window.practiceTimer = {};
 window.practiceTimer.paused = false;
 window.practiceTimer.timerQueue = [];
+window.practiceTimer.inputMode = 'time';
+window.practiceTimer.percentageModeTotalTime = '3600';
 
 document.addEventListener('DOMContentLoaded', function(e) {
   document.getElementById('inputbox').value = 'Scales 3m\nChords 2s\nPatterns 15m\nParty 00:30\nTimex 7\nThings 8:00\nStuff 45:20\nLol 08:30:42';
@@ -146,7 +151,7 @@ function loadTimers() {
   clearQueue();
   stopTimer();
   const inputText = document.getElementById('inputbox').value;
-  const queue = kit.getQueueFromInput(inputText);
+  const queue = kit.getQueueFromInput(inputText, window.practiceTimer.inputMode, window.practiceTimer.percentageModeTotalTime);
   queue.forEach((el, id) => {
     window.practiceTimer.timerQueue.push(new Timer(el.period, el.activity));
   });
@@ -173,8 +178,8 @@ function finishIfQueueIsEmpty() {
 
 function updateTotalPreview() {
   const prev = document.getElementById('total-preview');
-  const inputBox = document.getElementById('inputbox');
-  const queue = kit.getQueueFromInput(inputBox.value);
+  const inputText = document.getElementById('inputbox').value;
+  const queue = kit.getQueueFromInput(inputText, window.practiceTimer.inputMode, window.practiceTimer.percentageModeTotalTime);
   const total = queue.reduce((total, cur) => {
     return total + cur.period;
   }, 0);
@@ -258,9 +263,24 @@ function handleStartButtonClick(e) {
   startTimer();
 }
 
+function handleInputModeRadioClick(e) {
+  if (document.getElementById('input-mode-time').checked) {
+    window.practiceTimer.inputMode = 'time';
+  }
+  if (document.getElementById('input-mode-percentage').checked) {
+    window.practiceTimer.inputMode = 'percentage';
+  }
+}
+
+function handlePercentageModeTotalTimeInputChange(e) {
+  window.practiceTimer.percentageModeTotalTime = kit.parseTotalSeconds(this.value);
+}
+
 document.getElementById('start').addEventListener('click', handleStartButtonClick);
 document.getElementById('pause').addEventListener('click', handlePauseButtonClick);
 document.getElementById('inputbox').addEventListener('keyup', handleKeyUp);
 document.getElementById('inputbox').addEventListener('keydown', handleKeyDown);
-
+document.getElementById('input-mode-time').addEventListener('change', handleInputModeRadioClick);
+document.getElementById('input-mode-percentage').addEventListener('change', handleInputModeRadioClick);
+document.getElementById('percentage-mode-total-time').addEventListener('change', handlePercentageModeTotalTimeInputChange);
 

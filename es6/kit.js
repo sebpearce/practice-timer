@@ -1,15 +1,17 @@
 const kit = {
 
-  getQueueFromInput(input) {
+  getQueueFromInput(input, inputMode, percentageModeTotalTime) {
     const re = /(.+)\s(.+)$/;
     const lines = input.split('\n');
     const queue = lines.map(function(line) {
       if (!line.match(re)) return null;
       const activity = line.match(re)[1];
-      const period = line.match(re)[2];
+      const period = inputMode === 'percentage' ?
+                     Math.ceil(percentageModeTotalTime * kit.parsePercentage(line.match(re)[2])) :
+                     kit.parseTotalSeconds(line.match(re)[2]);
       return {
         activity: activity,
-        period: kit.parseTotalSeconds(period),
+        period: period,
       };
     });
     // removes falsy elements
@@ -48,6 +50,13 @@ const kit = {
     if (!input.match(/^(\d+)$/)) return false;
     const result = parseInt(input) * 60;
     return result;
+  },
+
+  parsePercentage(input) {
+    if (!input.match(/^(\d+)%$/)) return false;
+    const match = input.match(/^(\d+)%$/);
+    if (match.length !== 2) return;
+    return parseInt(match[1]) * 1e-2;
   },
 
   padWithZero(x) {

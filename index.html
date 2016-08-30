@@ -5,6 +5,15 @@
   </head>
   <body>
     <h1>Practice Timer</h1>
+    <div class="input-mode-container">
+      <label for="input-mode">Time</label>
+      <input type="radio" name="input-mode" id="input-mode-time" value="time" checked />
+      <label for="input-mode">Percentage</label>
+      <input type="radio" name="input-mode" id="input-mode-percentage" value="percent" />
+    </div>
+    <div class="percentage-mode-total-time-container">
+      <input type="text" class="percentage-mode-total-time" id="percentage-mode-total-time" />
+    </div>
     <textarea id="inputbox" class="inputbox"></textarea>
     <span id="total-preview" class="total-preview">00:00</span>
     <button id="start">Start</button>

@@ -5,6 +5,10 @@ body {
   font-family: $default-font;
 }
 
+.input-mode-container {
+  margin: 1em 0;
+}
+
 .inputbox {
   display: block;
   font-family: $default-font;
@@ -12,6 +16,16 @@ body {
   height: 400px;
   margin: 0 0 1em 0;
   width: 400px;
+}
+
+.percentage-mode-total-time-container {
+  margin: 1em 0;
+}
+
+.percentage-mode-total-time {
+  font-size: 1rem;
+  padding: 0.3em;
+  width: 50px;
 }
 
 .start-time-container,
@@ -101,5 +115,5 @@ label[for='finish-time'] {
 
 .total-preview {
   display: block;
-  padding: 0 0 1em 0;
+  margin: 0 0 1em 0;
 }

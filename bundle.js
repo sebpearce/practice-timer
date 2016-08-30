@@ -64,14 +64,17 @@
 	 *
 	 * - Settings link/modal
 	 * - Option to flash screen on change
+	 *   Option for count-in (e.g. 10 seconds)
+	 * - Allow for 'sec', 'min' or 'hr' in input
+	 * - Allow for input like 2m30s
+	 * - Allow for decimals ilke 1.5h
 	 * - Total time display (total time showing as you type in the input, total time remaining countdown)
 	 * - Skip button to skip current stage
 	 * - Local storage to remember textarea data
 	 * - Beautify CSS
-	 * - Keyboard shortcuts
-	 * - "Time since finished" functionality/display
+	 * - Keyboard shortcuts (pause = space or enter)
+	 * - "Time since finished" functionality/display (timer keeps counting after finished)
 	 * - Volume control (just use [audio element].volume)
-	 * - Ability to enter 2m30s
 	 */
 
 	function l(x) {
@@ -85,6 +88,8 @@
 	window.practiceTimer = {};
 	window.practiceTimer.paused = false;
 	window.practiceTimer.timerQueue = [];
+	window.practiceTimer.inputMode = 'time';
+	window.practiceTimer.percentageModeTotalTime = '3600';
 
 	document.addEventListener('DOMContentLoaded', function (e) {
 	  document.getElementById('inputbox').value = 'Scales 3m\nChords 2s\nPatterns 15m\nParty 00:30\nTimex 7\nThings 8:00\nStuff 45:20\nLol 08:30:42';
@@ -204,7 +209,7 @@
 	  clearQueue();
 	  stopTimer();
 	  var inputText = document.getElementById('inputbox').value;
-	  var queue = _kit2.default.getQueueFromInput(inputText);
+	  var queue = _kit2.default.getQueueFromInput(inputText, window.practiceTimer.inputMode, window.practiceTimer.percentageModeTotalTime);
 	  queue.forEach(function (el, id) {
 	    window.practiceTimer.timerQueue.push(new _timer2.default(el.period, el.activity));
 	  });
@@ -231,8 +236,8 @@
 
 	function updateTotalPreview() {
 	  var prev = document.getElementById('total-preview');
-	  var inputBox = document.getElementById('inputbox');
-	  var queue = _kit2.default.getQueueFromInput(inputBox.value);
+	  var inputText = document.getElementById('inputbox').value;
+	  var queue = _kit2.default.getQueueFromInput(inputText, window.practiceTimer.inputMode, window.practiceTimer.percentageModeTotalTime);
 	  var total = queue.reduce(function (total, cur) {
 	    return total + cur.period;
 	  }, 0);
@@ -316,10 +321,26 @@
 	  startTimer();
 	}
 
+	function handleInputModeRadioClick(e) {
+	  if (document.getElementById('input-mode-time').checked) {
+	    window.practiceTimer.inputMode = 'time';
+	  }
+	  if (document.getElementById('input-mode-percentage').checked) {
+	    window.practiceTimer.inputMode = 'percentage';
+	  }
+	}
+
+	function handlePercentageModeTotalTimeInputChange(e) {
+	  window.practiceTimer.percentageModeTotalTime = _kit2.default.parseTotalSeconds(this.value);
+	}
+
 	document.getElementById('start').addEventListener('click', handleStartButtonClick);
 	document.getElementById('pause').addEventListener('click', handlePauseButtonClick);
 	document.getElementById('inputbox').addEventListener('keyup', handleKeyUp);
 	document.getElementById('inputbox').addEventListener('keydown', handleKeyDown);
+	document.getElementById('input-mode-time').addEventListener('change', handleInputModeRadioClick);
+	document.getElementById('input-mode-percentage').addEventListener('change', handleInputModeRadioClick);
+	document.getElementById('percentage-mode-total-time').addEventListener('change', handlePercentageModeTotalTimeInputChange);
 
 /***/ },
 /* 1 */
@@ -331,16 +352,16 @@
 	  value: true
 	});
 	var kit = {
-	  getQueueFromInput: function getQueueFromInput(input) {
+	  getQueueFromInput: function getQueueFromInput(input, inputMode, percentageModeTotalTime) {
 	    var re = /(.+)\s(.+)$/;
 	    var lines = input.split('\n');
 	    var queue = lines.map(function (line) {
 	      if (!line.match(re)) return null;
 	      var activity = line.match(re)[1];
-	      var period = line.match(re)[2];
+	      var period = inputMode === 'percentage' ? Math.ceil(percentageModeTotalTime * kit.parsePercentage(line.match(re)[2])) : kit.parseTotalSeconds(line.match(re)[2]);
 	      return {
 	        activity: activity,
-	        period: kit.parseTotalSeconds(period)
+	        period: period
 	      };
 	    });
 	    // removes falsy elements
@@ -374,6 +395,12 @@
 	    if (!input.match(/^(\d+)$/)) return false;
 	    var result = parseInt(input) * 60;
 	    return result;
+	  },
+	  parsePercentage: function parsePercentage(input) {
+	    if (!input.match(/^(\d+)%$/)) return false;
+	    var match = input.match(/^(\d+)%$/);
+	    if (match.length !== 2) return;
+	    return parseInt(match[1]) * 1e-2;
 	  },
 	  padWithZero: function padWithZero(x) {
 	    return x < 10 ? '0' + x : x;
@@ -484,7 +511,7 @@
 
 
 	// module
-	exports.push([module.id, "body {\n  color: #444;\n  font-family: \"Open Sans\", \"Helvetica Neue\", \"Helvetica\", \"Arial\", sans-serif; }\n\n.inputbox {\n  display: block;\n  font-family: \"Open Sans\", \"Helvetica Neue\", \"Helvetica\", \"Arial\", sans-serif;\n  font-size: 21px;\n  height: 400px;\n  margin: 0 0 1em 0;\n  width: 400px; }\n\n.start-time-container,\n.finish-time-container {\n  display: none; }\n\nlabel[for='start-time'],\nlabel[for='finish-time'] {\n  display: inline-block;\n  width: 100px; }\n\n.-running {\n  color: red; }\n\n.queue {\n  margin: 1em 0; }\n\n.queue-row,\n.queue-row-total {\n  font-size: 20px; }\n\n.queue-row-total {\n  padding-top: 1em; }\n\n.queue-row-total .queue-row-activity,\n.queue-row-total .queue-row-period {\n  font-weight: bold; }\n\n.queue-row-activity,\n.queue-row-period {\n  display: inline-block; }\n\n.queue-row-activity {\n  width: 200px; }\n\n.queue-row-period {\n  min-width: 100px;\n  text-align: right; }\n\n.timer-display-container {\n  padding: 30px 0; }\n\n.timer-display {\n  display: none;\n  font-size: 100px;\n  font-weight: bold; }\n\n.timer-display-separator:after {\n  content: ':'; }\n\n.timer-display-activity {\n  display: block;\n  font-size: 50px;\n  font-weight: 400;\n  height: 40px; }\n\n.total-preview {\n  display: block;\n  padding: 0 0 1em 0; }\n", ""]);
+	exports.push([module.id, "body {\n  color: #444;\n  font-family: \"Open Sans\", \"Helvetica Neue\", \"Helvetica\", \"Arial\", sans-serif; }\n\n.input-mode-container {\n  margin: 1em 0; }\n\n.inputbox {\n  display: block;\n  font-family: \"Open Sans\", \"Helvetica Neue\", \"Helvetica\", \"Arial\", sans-serif;\n  font-size: 21px;\n  height: 400px;\n  margin: 0 0 1em 0;\n  width: 400px; }\n\n.percentage-mode-total-time-container {\n  margin: 1em 0; }\n\n.percentage-mode-total-time {\n  font-size: 1rem;\n  padding: 0.3em;\n  width: 50px; }\n\n.start-time-container,\n.finish-time-container {\n  display: none; }\n\nlabel[for='start-time'],\nlabel[for='finish-time'] {\n  display: inline-block;\n  width: 100px; }\n\n.-running {\n  color: red; }\n\n.queue {\n  margin: 1em 0; }\n\n.queue-row,\n.queue-row-total {\n  font-size: 20px; }\n\n.queue-row-total {\n  padding-top: 1em; }\n\n.queue-row-total .queue-row-activity,\n.queue-row-total .queue-row-period {\n  font-weight: bold; }\n\n.queue-row-activity,\n.queue-row-period {\n  display: inline-block; }\n\n.queue-row-activity {\n  width: 200px; }\n\n.queue-row-period {\n  min-width: 100px;\n  text-align: right; }\n\n.timer-display-container {\n  padding: 30px 0; }\n\n.timer-display {\n  display: none;\n  font-size: 100px;\n  font-weight: bold; }\n\n.timer-display-separator:after {\n  content: ':'; }\n\n.timer-display-activity {\n  display: block;\n  font-size: 50px;\n  font-weight: 400;\n  height: 40px; }\n\n.total-preview {\n  display: block;\n  margin: 0 0 1em 0; }\n", ""]);
 
 	// exports
 
