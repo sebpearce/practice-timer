@@ -2,17 +2,19 @@
  *
  * - Settings link/modal
  * - Option to flash screen on change
- *   Option for count-in (e.g. 10 seconds)
+ * - Option for count-in (e.g. 10 seconds)
  * - Allow for 'sec', 'min' or 'hr' in input
  * - Allow for input like 2m30s
  * - Allow for decimals ilke 1.5h
  * - Total time display (total time showing as you type in the input, total time remaining countdown)
  * - Skip button to skip current stage
- * - Local storage to remember textarea data
- * - Beautify CSS
  * - Keyboard shortcuts (pause = space or enter)
  * - "Time since finished" functionality/display (timer keeps counting after finished)
  * - Volume control (just use [audio element].volume)
+ * - Beautify CSS
+ * - Add README.md
+ * - Include licence/header info here
+ * - Refactor
  */
 
 function l(x) {
@@ -30,14 +32,43 @@ import styles from '../styles/main.scss';
 window.practiceTimer = {};
 window.practiceTimer.paused = false;
 window.practiceTimer.timerQueue = [];
-window.practiceTimer.inputMode = 'time';
-window.practiceTimer.percentageModeTotalTime = '3600';
 
 document.addEventListener('DOMContentLoaded', function(e) {
-  document.getElementById('inputbox').value = 'Scales 3m\nChords 2s\nPatterns 15m\nParty 00:30\nTimex 7\nThings 8:00\nStuff 45:20\nLol 08:30:42';
+  const defaultTimeText = 'Scales 10m\nChords 10m\nPatterns 15m\nNew tune 20m';
+  const defaultPercentageText = 'Reading 30%\nWriting 20%\nSpeaking 20%\nListening 20%\nVocabulary 10%';
+  const defaultPercentageModeTotalTime = '1h';
+
+  if (localStorage.getItem('timeInputString') === '') localStorage.setItem('timeInputString', defaultTimeText);
+  if (localStorage.getItem('percentageInputString') === '') localStorage.setItem('percentageInputString', defaultPercentageText);
+  if (localStorage.getItem('percentageModeTotalTimeString') === '') localStorage.setItem('percentageModeTotalTimeString', defaultPercentageModeTotalTime);
+
+  if (localStorage.getItem('inputMode') === 'percentage') {
+    window.practiceTimer.inputMode = 'percentage';
+    document.getElementById('input-mode-percentage').checked = true;
+    document.getElementById('inputbox').value = localStorage.getItem('percentageInputString');
+    document.getElementById('percentage-mode-total-time').value = localStorage.getItem('percentageModeTotalTimeString');
+    showPercentageModeTotalTime();
+  } else {
+    window.practiceTimer.inputMode = 'time';
+    document.getElementById('inputbox').value = localStorage.getItem('timeInputString');
+  }
+
+  window.practiceTimer.percentageModeTotalTime = kit.parseTotalSeconds(localStorage.getItem('percentageModeTotalTimeString'));
+
   updateTotalPreview();
   loadAudio();
 });
+
+window.onbeforeunload = function() {
+  if (document.getElementById('input-mode-time').checked) {
+    localStorage.setItem('timeInputString', document.getElementById('inputbox').value);
+  }
+  if (document.getElementById('input-mode-percentage').checked) {
+    localStorage.setItem('percentageInputString', document.getElementById('inputbox').value);
+  }
+  localStorage.setItem('inputMode', window.practiceTimer.inputMode);
+  localStorage.setItem('percentageModeTotalTimeString', document.getElementById('percentage-mode-total-time').value);
+}
 
 function updateTimerDisplay(rawSeconds) {
   if (window.practiceTimer.timerQueue.hoursNeeded) {
@@ -194,7 +225,7 @@ function hideHourDisplay() {
   document.getElementById('timer-display-hr-section').style.display = 'none';
 }
 
-function handleKeyUp(e) {
+function handleInputBoxInput(e) {
   updateTotalPreview();
 }
 
@@ -259,28 +290,47 @@ function startTimer() {
   startTimerLoop();
 }
 
+function showPercentageModeTotalTime() {
+  document.getElementById('percentage-mode-total-time').value = localStorage.getItem('percentageModeTotalTimeString');
+  document.getElementById('percentage-mode-total-time-container').style.display = 'block';
+}
+
+function hidePercentageModeTotalTime() {
+  document.getElementById('percentage-mode-total-time-container').style.display = 'none';
+}
+
 function handleStartButtonClick(e) {
   startTimer();
 }
 
 function handleInputModeRadioClick(e) {
   if (document.getElementById('input-mode-time').checked) {
+    localStorage.setItem('percentageInputString', document.getElementById('inputbox').value);
+    localStorage.setItem('percentageModeTotalTimeString', document.getElementById('percentage-mode-total-time').value);
     window.practiceTimer.inputMode = 'time';
+    document.getElementById('inputbox').value = localStorage.getItem('timeInputString') || '';
+    hidePercentageModeTotalTime();
   }
   if (document.getElementById('input-mode-percentage').checked) {
+    localStorage.setItem('timeInputString', document.getElementById('inputbox').value);
     window.practiceTimer.inputMode = 'percentage';
+    document.getElementById('inputbox').value = localStorage.getItem('percentageInputString') || '';
+    document.getElementById('percentage-mode-total-time').value = localStorage.getItem('percentageModeTotalTimeString');
+    showPercentageModeTotalTime();
   }
+  updateTotalPreview();
 }
 
 function handlePercentageModeTotalTimeInputChange(e) {
   window.practiceTimer.percentageModeTotalTime = kit.parseTotalSeconds(this.value);
+  updateTotalPreview();
 }
 
 document.getElementById('start').addEventListener('click', handleStartButtonClick);
 document.getElementById('pause').addEventListener('click', handlePauseButtonClick);
-document.getElementById('inputbox').addEventListener('keyup', handleKeyUp);
+document.getElementById('inputbox').addEventListener('input', handleInputBoxInput);
 document.getElementById('inputbox').addEventListener('keydown', handleKeyDown);
 document.getElementById('input-mode-time').addEventListener('change', handleInputModeRadioClick);
 document.getElementById('input-mode-percentage').addEventListener('change', handleInputModeRadioClick);
-document.getElementById('percentage-mode-total-time').addEventListener('change', handlePercentageModeTotalTimeInputChange);
+document.getElementById('percentage-mode-total-time').addEventListener('input', handlePercentageModeTotalTimeInputChange);
 
