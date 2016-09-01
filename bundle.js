@@ -62,17 +62,17 @@
 
 	/* TODO:
 	 *
-	 * - Settings link/modal
-	 * - Option to flash screen on change
 	 * - Option for count-in (e.g. 10 seconds)
-	 * - Allow for 'sec', 'min' or 'hr' in input
-	 * - Allow for input like 2m30s
-	 * - Allow for decimals ilke 1.5h
-	 * - Total time display (total time showing as you type in the input, total time remaining countdown)
-	 * - Skip button to skip current stage
 	 * - Keyboard shortcuts (pause = space or enter)
 	 * - "Time since finished" functionality/display (timer keeps counting after finished)
+	 * - Total time display (total time showing as you type in the input, total time remaining countdown)
+	 * - Allow for 'sec', 'min' or 'hr' in input
+	 * - Allow for input like 2m30s
+	 * - Allow for decimals like 1.5h
+	 * - Settings link/modal
+	 * - Skip button to skip current stage?
 	 * - Volume control (just use [audio element].volume)
+	 * - Option to flash screen on change
 	 * - Beautify CSS
 	 * - Add README.md
 	 * - Include licence/header info here
@@ -90,6 +90,7 @@
 	window.practiceTimer = {};
 	window.practiceTimer.paused = false;
 	window.practiceTimer.timerQueue = [];
+	window.practiceTimer.countIn = false;
 
 	document.addEventListener('DOMContentLoaded', function (e) {
 	  var defaultTimeText = 'Scales 10m\nChords 10m\nPatterns 15m\nNew tune 20m';
@@ -210,6 +211,9 @@
 	    row.appendChild(period);
 	    window.practiceTimer.timerQueue[i].row = row;
 	    queueDisplayContainer.appendChild(row);
+	    if (i === 0 && window.practiceTimer.countIn) {
+	      _kit2.default.addClass(row, 'count-in');
+	    };
 	  });
 
 	  var totalSeconds = window.practiceTimer.timerQueue.reduce(function (total, cur) {
@@ -244,6 +248,7 @@
 	  queue.forEach(function (el, id) {
 	    window.practiceTimer.timerQueue.push(new _timer2.default(el.period, el.activity));
 	  });
+	  if (window.practiceTimer.countIn) window.practiceTimer.timerQueue.unshift(new _timer2.default(10, 'Starting...'));
 	}
 
 	function updateQueueDisplayRowHighlight(queueItem) {
@@ -384,6 +389,10 @@
 	  updateTotalPreview();
 	}
 
+	function handleCountInSettingChange(e) {
+	  window.practiceTimer.countIn = this.checked;
+	}
+
 	document.getElementById('start').addEventListener('click', handleStartButtonClick);
 	document.getElementById('pause').addEventListener('click', handlePauseButtonClick);
 	document.getElementById('inputbox').addEventListener('input', handleInputBoxInput);
@@ -391,6 +400,7 @@
 	document.getElementById('input-mode-time').addEventListener('change', handleInputModeRadioClick);
 	document.getElementById('input-mode-percentage').addEventListener('change', handleInputModeRadioClick);
 	document.getElementById('percentage-mode-total-time').addEventListener('input', handlePercentageModeTotalTimeInputChange);
+	document.getElementById('count-in-setting').addEventListener('change', handleCountInSettingChange);
 
 /***/ },
 /* 1 */
@@ -561,7 +571,7 @@
 
 
 	// module
-	exports.push([module.id, "body {\n  color: #444;\n  font-family: \"Open Sans\", \"Helvetica Neue\", \"Helvetica\", \"Arial\", sans-serif; }\n\n.input-mode-container {\n  margin: 1em 0; }\n\n.inputbox {\n  display: block;\n  font-family: \"Open Sans\", \"Helvetica Neue\", \"Helvetica\", \"Arial\", sans-serif;\n  font-size: 21px;\n  height: 400px;\n  margin: 0 0 1em 0;\n  width: 400px; }\n\n.percentage-mode-total-time-container {\n  display: none;\n  margin: 1em 0; }\n\n.percentage-mode-total-time {\n  font-size: 1rem;\n  padding: 0.3em;\n  width: 50px; }\n\n.start-time-container,\n.finish-time-container {\n  display: none; }\n\nlabel[for='start-time'],\nlabel[for='finish-time'] {\n  display: inline-block;\n  width: 100px; }\n\n.-running {\n  color: red; }\n\n.queue {\n  margin: 1em 0; }\n\n.queue-row,\n.queue-row-total {\n  font-size: 20px; }\n\n.queue-row-total {\n  padding-top: 1em; }\n\n.queue-row-total .queue-row-activity,\n.queue-row-total .queue-row-period {\n  font-weight: bold; }\n\n.queue-row-activity,\n.queue-row-period {\n  display: inline-block; }\n\n.queue-row-activity {\n  width: 200px; }\n\n.queue-row-period {\n  min-width: 100px;\n  text-align: right; }\n\n.timer-display-container {\n  padding: 30px 0; }\n\n.timer-display {\n  display: none;\n  font-size: 100px;\n  font-weight: bold; }\n\n.timer-display-separator:after {\n  content: ':'; }\n\n.timer-display-activity {\n  display: block;\n  font-size: 50px;\n  font-weight: 400;\n  height: 40px; }\n\n.total-preview {\n  display: block;\n  margin: 0 0 1em 0; }\n", ""]);
+	exports.push([module.id, "body {\n  color: #444;\n  font-family: \"Open Sans\", \"Helvetica Neue\", \"Helvetica\", \"Arial\", sans-serif; }\n\n.input-mode-container {\n  margin: 1em 0; }\n\n.inputbox {\n  display: block;\n  font-family: \"Open Sans\", \"Helvetica Neue\", \"Helvetica\", \"Arial\", sans-serif;\n  font-size: 21px;\n  height: 400px;\n  margin: 0 0 1em 0;\n  width: 400px; }\n\n.percentage-mode-total-time-container {\n  display: none;\n  margin: 1em 0; }\n\n.percentage-mode-total-time {\n  font-size: 1rem;\n  padding: 0.3em;\n  width: 50px; }\n\n.start-time-container,\n.finish-time-container {\n  display: none; }\n\nlabel[for='start-time'],\nlabel[for='finish-time'] {\n  display: inline-block;\n  width: 100px; }\n\n.-running {\n  color: red; }\n\n.count-in {\n  display: none; }\n\n.queue {\n  margin: 1em 0; }\n\n.queue-row,\n.queue-row-total {\n  font-size: 20px; }\n\n.queue-row-total {\n  padding-top: 1em; }\n\n.queue-row-total .queue-row-activity,\n.queue-row-total .queue-row-period {\n  font-weight: bold; }\n\n.queue-row-activity,\n.queue-row-period {\n  display: inline-block; }\n\n.queue-row-activity {\n  width: 200px; }\n\n.queue-row-period {\n  min-width: 100px;\n  text-align: right; }\n\n.timer-display-container {\n  padding: 30px 0; }\n\n.timer-display {\n  display: none;\n  font-size: 100px;\n  font-weight: bold; }\n\n.timer-display-separator:after {\n  content: ':'; }\n\n.timer-display-activity {\n  display: block;\n  font-size: 50px;\n  font-weight: 400;\n  height: 40px; }\n\n.total-preview {\n  display: block;\n  margin: 0 0 1em 0; }\n", ""]);
 
 	// exports
 
